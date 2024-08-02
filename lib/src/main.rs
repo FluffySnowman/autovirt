@@ -13,6 +13,17 @@ struct Cli {
 
     /// The name of the virtual machine to make (qemu)
     vm_name: String,
+
+    /// Virtual machine type (GUI, CLI)
+
+    #[arg(long)]
+    vm_type: String,
+
+    /// VM Operating System (ubuntu_2204, rocky8)
+
+    #[arg(long)]
+    vm_os: String
+
 }
 
 fn main() {
