@@ -2,7 +2,7 @@
 
 use clap::Parser;
 use clap::Subcommand;
-use std::process::Command;
+// use std::process::Command;
 
 // project imports
 mod info;
@@ -19,27 +19,29 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum VMCommands {
-    /// Lists details about certain things (`all` VMs, `nets` all VM networks)
-    List {
-        #[arg(help = "The name of the VM to show details about")]
-        name: String,
 
-        #[arg(help = "The virtual network to show details about", default_value = "")]
-        path: String,
+    /// Gets info & details about VMs and networks (qemu)
+    Info {
+        #[arg(help = "The name of the VM to show details about", default_value = "none")]
+        name: String,
     },
+    /// Lists general VM-related items
+    List {
+        #[arg(help = "Lists All VMs")]
+        item: String,
+    }
 }
 
 fn main() {
     let cli_arguments = Cli::parse();
 
     match &cli_arguments.command {
-        VMCommands::List { name, path } => {
+        VMCommands::Info { name } => {
             info::get_vm_info(name);
-            let mut test_command = Command::new("stat");
-            test_command.arg(path);
-            let something = test_command.status().expect("Command Failed");
-            println!();
-            _ = something;
+        },
+        VMCommands::List { item } => {
+            info::show_all_vms();
+            _ = item;
         }
     }
 }
