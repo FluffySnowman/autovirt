@@ -18,12 +18,8 @@ ORIGIN_DIR := $(shell pwd)
 h: help
 r: run
 b: build
-bc: buildcopy
-w: watch
-we: watchexec
-c: clean
-i: install
-build: b
+t: test
+wt: watchtest
 
 # full help list with proper formatting
 help:

@@ -1,6 +1,11 @@
+// Rust imports
+
 use clap::Parser;
 use clap::Subcommand;
 use std::process::Command;
+
+// project imports
+mod info;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -29,8 +34,7 @@ fn main() {
 
     match &cli_arguments.command {
         VMCommands::List { name, path } => {
-            _ = name;
-            println!("hello there");
+            info::get_vm_info(name);
             let mut test_command = Command::new("stat");
             test_command.arg(path);
             let something = test_command.status().expect("Command Failed");
