@@ -33,7 +33,6 @@ pub fn create_new_vm(
     vm_user: &String,
     vm_pass: &String,
 ) {
-
     // Creating the vm details hashmap (sizes, types, ram amount etc)
     let mut vm_meta_details = HashMap::new();
     vm_meta_details.insert(
@@ -47,10 +46,12 @@ pub fn create_new_vm(
 
     // testing vm size prints/set/get operations
     match vm_meta_details.get("1G") {
-        Some(info) => println!("Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ", info.vcpus_num, info.ram_mb, info.disk_gb),
+        Some(info) => println!(
+            "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
+            info.vcpus_num, info.ram_mb, info.disk_gb
+        ),
         None => eprintln!("no vm meta details found for whatever you put in oof"),
     }
-
 
     // Printing vm details (since I'll probably forget everythnig even though
     // its on the line right above this)
