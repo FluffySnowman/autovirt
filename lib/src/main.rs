@@ -50,7 +50,6 @@ enum VMCommands {
         #[arg(help = "The size of the new VM (1G, 2G ...)", default_value = "1G")]
         size: String,
 
-
         /// The suername for the VM (non-root)
         #[arg(help = "The username for the VM", default_value = "fluffy")]
         user: String,
@@ -72,7 +71,13 @@ fn main() {
             info::show_all_vms();
             _ = item;
         }
-        VMCommands::Create { name, dist, size, user, pass } => {
+        VMCommands::Create {
+            name,
+            dist,
+            size,
+            user,
+            pass,
+        } => {
             scripts::create_new_vm(name, dist, size, user, pass);
         }
     }
