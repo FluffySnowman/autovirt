@@ -2,11 +2,11 @@
 
 use clap::Parser;
 use clap::Subcommand;
-use info::get_vm_info;
 // use std::process::Command;
 
 // project imports
 mod info;
+mod scripts;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -21,16 +21,26 @@ struct Cli {
 #[derive(Subcommand)]
 enum VMCommands {
 
-    /// Gets info & details about VMs and networks (qemu)
+    /// Gets info & details about VMs and networks (qemu).
     Info {
         #[arg(help = "The name of the VM to show details about", default_value = "none")]
         name: String,
     },
-    /// Lists general VM-related items
+    /// Lists general VM-related items.
     List {
-        #[arg(help = "Lists All VMs")]
+        #[arg(help = "The item to list")]
         item: String,
-    }
+    },
+    /// Create a new VM based on a given distro, user/pass and name.
+    Create {
+        /// The name of the new virtual machine.
+        #[arg(help = "Name of the VM to be created", default_value = "basicvm")]
+        name: String,
+
+        /// The distribution (linux distro) of the VM to create.
+        #[arg(help = "Distro of the VM to create (see options with \n`autovirt show available`)", default_value = "ubuntu2204")]
+        distro: String,
+    },
 }
 
 fn main() {
@@ -43,6 +53,11 @@ fn main() {
         VMCommands::List { item } => {
             info::show_all_vms();
             _ = item;
+        },
+        VMCommands::Create { name, distro } => {
+            _ = name;
+            _ = distro;
+            scripts::create_new_vm(name);
         }
     }
 }
