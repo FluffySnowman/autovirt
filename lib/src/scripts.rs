@@ -44,12 +44,19 @@ pub fn create_new_vm(
         },
     );
 
+    let mut vcpus_cmd_arg = "";
+
     // testing vm size prints/set/get operations
     match vm_meta_details.get("1G") {
-        Some(info) => println!(
+        Some(info) => { println!(
             "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
             info.vcpus_num, info.ram_mb, info.disk_gb
-        ),
+        );
+        let vcpu_printf = std::fmt::format(format_args!("--vcpus={}", info.vcpus_num));
+        println!("{}", vcpu_printf);
+        // vcpus_cmd_arg = std::fmt::format();
+        // println!("{}", vcpus_cmd_arg);
+        }
         None => eprintln!("no vm meta details found for whatever you put in oof"),
     }
 
