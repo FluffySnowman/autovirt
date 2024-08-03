@@ -63,5 +63,12 @@ pub fn create_new_vm(
     println!("\tVM User: {}", vm_user);
     println!("\tVM Pass: {}", vm_pass);
 
+    if vm_size == "1G" {
+        println!("vm size is 1g");
+    } else {
+        println!("vm size not found");
+    }
+
+
     // Building command to create a vm
 }
