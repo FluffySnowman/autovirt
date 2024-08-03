@@ -1,0 +1,59 @@
+root = true
+
+# All files default settings
+[*]
+charset = utf-8
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_style = space
+max_line_length = 80
+indent_size = 4
+tab_width = 4
+
+# general
+[{*.{awk,c,dts,dtsi,dtso,h,zig,mk,s,S},Kconfig,Makefile,Makefile.*}]
+charset = utf-8
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_style = space
+max_line_length = 80
+indent_size = 4
+tab_width = 4
+
+
+[*.{rs}]
+tab_width = 2
+
+
+[*.{c,h}]
+tab_width = 2
+
+# makefile override for tabs instead of spaces
+# since makefiles is dependant on tabs oof 🫡
+[Makefile, Makefile.*]
+indent_style = tab
+indent_size = 4
+
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+[**/Makefile]
+indent_style = tab
+indent_size = 4
+
+# idk why this is here
+# [Dockerfile]
+# indent_style = tab
+# indent_size = 2
+# end_of_line = lf
+# charset = utf-8
+
+# idk why this is here either
+# [*.{yml,yaml}]
+# indent_style = space
+# indent_size = 2
+# end_of_line = lf
+# charset = utf-8
