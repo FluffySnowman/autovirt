@@ -44,7 +44,20 @@ enum VMCommands {
             help = "Distro of the VM to create (see options with \n`autovirt show available`)",
             default_value = "ubuntu2204"
         )]
-        distro: String,
+        dist: String,
+
+        /// The size of the new virtual machine (1G, 2G ...)
+        #[arg(help = "The size of the new VM (1G, 2G ...)", default_value = "1G")]
+        size: String,
+
+
+        /// The suername for the VM (non-root)
+        #[arg(help = "The username for the VM", default_value = "fluffy")]
+        user: String,
+
+        /// The password for the VM (non-root)
+        #[arg(help = "The Password for the VM", default_value = "123456")]
+        pass: String,
     },
 }
 
@@ -59,10 +72,8 @@ fn main() {
             info::show_all_vms();
             _ = item;
         }
-        VMCommands::Create { name, distro } => {
-            _ = name;
-            _ = distro;
-            scripts::create_new_vm(name);
+        VMCommands::Create { name, dist, size, user, pass } => {
+            scripts::create_new_vm(name, dist, size, user, pass);
         }
     }
 }
