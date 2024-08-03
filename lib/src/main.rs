@@ -2,6 +2,7 @@
 
 use clap::Parser;
 use clap::Subcommand;
+use info::get_vm_info;
 // use std::process::Command;
 
 // project imports
