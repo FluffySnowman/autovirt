@@ -20,10 +20,12 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum VMCommands {
-
     /// Gets info & details about VMs and networks (qemu).
     Info {
-        #[arg(help = "The name of the VM to show details about", default_value = "none")]
+        #[arg(
+            help = "The name of the VM to show details about",
+            default_value = "none"
+        )]
         name: String,
     },
     /// Lists general VM-related items.
@@ -38,7 +40,10 @@ enum VMCommands {
         name: String,
 
         /// The distribution (linux distro) of the VM to create.
-        #[arg(help = "Distro of the VM to create (see options with \n`autovirt show available`)", default_value = "ubuntu2204")]
+        #[arg(
+            help = "Distro of the VM to create (see options with \n`autovirt show available`)",
+            default_value = "ubuntu2204"
+        )]
         distro: String,
     },
 }
@@ -49,11 +54,11 @@ fn main() {
     match &cli_arguments.command {
         VMCommands::Info { name } => {
             info::get_vm_info(name);
-        },
+        }
         VMCommands::List { item } => {
             info::show_all_vms();
             _ = item;
-        },
+        }
         VMCommands::Create { name, distro } => {
             _ = name;
             _ = distro;
