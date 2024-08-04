@@ -44,7 +44,7 @@ pub fn create_new_vm(
         },
     );
 
-    let mut vcpus_cmd_arg = "";
+    let mut _vcpus_cmd_arg = "";
 
     // testing vm size prints/set/get operations
     match vm_meta_details.get("1G") {
