@@ -2,11 +2,13 @@
 
 use clap::Parser;
 use clap::Subcommand;
+use tokio;
 // use std::process::Command;
 
 // project imports
 mod info;
 mod scripts;
+mod download;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -68,7 +70,9 @@ enum VMCommands {
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
+
     let cli_arguments = Cli::parse();
 
     match &cli_arguments.command {
@@ -89,7 +93,10 @@ fn main() {
             scripts::create_new_vm(name, dist, size, user, pass);
         }
         VMCommands::Download { dist } =>  {
-            println!("downloading distro... {}", dist);
+            println!("Downloading OS Image for {}", dist);
+            download::download_os_image();
+            println!("OS downloaded -> {}", dist);
+            // let _ = download::download_os_image();
         }
     }
 }
