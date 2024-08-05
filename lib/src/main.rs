@@ -58,6 +58,14 @@ enum VMCommands {
         #[arg(help = "The Password for the VM", default_value = "123456")]
         pass: String,
     },
+    /// Downloads a cloud-init compatible image for the specified distro.
+    Download {
+        /// The distro (linux distribution) of the image to download
+        #[arg(
+            help = "The VM Image (cloud init/qemu) to download.\nSee `autovirt show available` for a full list\nof available images to download.",
+        )]
+        dist: String,
+    }
 }
 
 fn main() {
@@ -79,6 +87,9 @@ fn main() {
             pass,
         } => {
             scripts::create_new_vm(name, dist, size, user, pass);
+        }
+        VMCommands::Download { dist } =>  {
+            println!("downloading distro... {}", dist);
         }
     }
 }
