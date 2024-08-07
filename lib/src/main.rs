@@ -76,7 +76,6 @@ enum VMCommands {
 
 #[tokio::main]
 async fn main() {
-
     let cli_arguments = Cli::parse();
 
     match &cli_arguments.command {
@@ -101,7 +100,6 @@ async fn main() {
             println!("Downloading OS Image for {}", dist);
             download::download_os_image();
             println!("OS downloaded -> {}", dist);
-            // let _ = download::download_os_image();
         }
     }
 }

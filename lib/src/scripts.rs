@@ -1,5 +1,8 @@
 // use std::process::Command;
 use std::{collections::HashMap, fmt::write};
+use std::thread;
+use std::time;
+use tokio::process::Command;
 
 use reqwest::Certificate;
 
@@ -102,6 +105,12 @@ pub fn create_new_vm(
         println!("vm size not found");
     }
 
+    println!("Executing vm startup in 3 seconds...");
+    let startup_wait = time::Duration::from_secs(3);
+
+    thread::sleep(startup_wait);
+    println!("Spawning new thread & Starting VM ...");
+
     // Building command to create a vm
 
     let mut create_vm_cmd = std::process::Command::new("qemu-system-x86_64");
@@ -113,12 +122,14 @@ pub fn create_new_vm(
         .arg("-machine")
         .arg("accel=kvm:tcg")
         .arg("-m")
-        .arg(vm_memory_mb)
+        .arg(&vm_memory_mb)
         .arg("-nographic")
         .arg("-hda")
         .arg("./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img")
         .arg("-smbios")
-        .arg("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/");
+        .arg(format!("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/"))
+        .arg("-serial")
+        .arg("pty");
 
     // printng cmd cos I probably messed it up
     println!("{:?}", create_vm_cmd);
