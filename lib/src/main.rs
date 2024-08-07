@@ -59,6 +59,10 @@ enum VMCommands {
         /// The password for the VM (non-root)
         #[arg(help = "The Password for the VM", default_value = "123456")]
         pass: String,
+
+        /// The amount of memory in MB (Example: 512 or 1024)
+        #[arg(help = "The amount of memory for the VM", default_value = "512")]
+        mem: String,
     },
     /// Downloads a cloud-init compatible image for the specified distro.
     Download {
@@ -89,8 +93,9 @@ async fn main() {
             size,
             user,
             pass,
+            mem,
         } => {
-            scripts::create_new_vm(name, dist, size, user, pass);
+            scripts::create_new_vm(name, dist, size, user, pass, mem);
         }
         VMCommands::Download { dist } =>  {
             println!("Downloading OS Image for {}", dist);
