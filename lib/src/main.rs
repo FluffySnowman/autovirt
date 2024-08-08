@@ -3,6 +3,7 @@
 use clap::Parser;
 use clap::Subcommand;
 use tokio;
+use tokio::task;
 use tokio::runtime::Runtime;
 // use std::process::Command;
 
@@ -83,8 +84,11 @@ async fn main() {
 
     // Setting imds http server params (used for cloud-init/vm config files).
     // This includes user data, metadata and other shit.
-    let imds_addr = "0.0.0.0:8000";
+    let imds_listen_host = "0.0.0.0";
+    let imds_listen_port = "8000";
     let imds_data_dir = "./lib/src/conf/";
+
+    // File server is run in the create command section.
 
     match &cli_arguments.command {
         VMCommands::Info { name } => {
@@ -103,6 +107,16 @@ async fn main() {
             pass,
             mem,
         } => {
+            // File server is currently run with hardcoded values since the
+            // compiler keeps yapping.
+            //
+            // It is run async or in its own thread so that it doesn't block the
+            // vm startup and creation etc.
+
+            tokio::spawn(async move {
+                imds::start_idms_server();
+            });
+
             // imds::run_file_server(imds_addr, imds_data_dir).await;
             scripts::create_new_vm(name, dist, size, user, pass, mem);
         }

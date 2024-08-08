@@ -1,50 +1,39 @@
-// use hyper::service::{make_service_fn, service_fn};
-// use hyper::{Body, Request, Response, Server};
-// use std::convert::Infallible;
-// use std::fs::File;
-// use std::io::Read;
-// use std::path::{Path, PathBuf};
-// use tokio::runtime::Runtime;
+use simple_server::Server;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 
-// async fn serve_file(req: Request<Body>, base_path: &str) -> Result<Response<Body>, Infallible> {
-//     let path = req.uri().path().trim_start_matches('/');
-//     let path = if path.is_empty() { "index.html" } else { path };
+/// Function to start the IDMS server (Instance Metadata Service) for the
+/// metadata for a VM.
+///
+/// Its just a simple httpserverthat serves files from the config directory in
+/// this project.
+///
+/// The cofig directory has cloud-init config files (user-data, meta-data etc.)
+/// which may have dynamic parameters based on user specified value.
+///
+pub fn start_idms_server() {
+    let server = Server::new(move |request, mut response| {
+        let path = request.uri().path().trim_start_matches('/');
+        let path = if path.is_empty() { "index.html" } else { path };
 
-//     let file_path = Path::new(base_path).join(path);
+        // Hardcoding this shit in since there's a million diffenent types for a
+        // string in this shitty language.
+        //
+        let file_path = Path::new("./lib/src/conf/").join(path);
 
-//     if file_path.is_file() {
-//         let mut file = File::open(&file_path).expect("file not found");
-//         let mut contents = Vec::new();
-//         file.read_to_end(&mut contents).expect("unable to read file");
+        if file_path.is_file() {
+            let mut file = File::open(&file_path).expect("file. not found rip");
+            let mut contents = Vec::new();
+            file.read_to_end(&mut contents).expect("im dyslexic");
+            Ok(response.body(contents)?)
+        } else {
+            let not_found = "404 🫡";
+            Ok(response.status(404).body(not_found.as_bytes().to_vec())?)
+        }
+    });
 
-//         Ok(Response::new(Body::from(contents)))
-//     } else {
-//         let not_found = "404 Not Found";
-//         Ok(Response::builder()
-//             .status(404)
-//             .body(Body::from(not_found))
-//             .unwrap())
-//     }
-// }
-
-// pub async fn run_file_server(addr: &str, base_path: &str) {
-//     let addr = addr.parse().expect("Unable to parse socket address");
-
-//     let make_svc = make_service_fn(move |_conn| {
-//         let base_path = base_path.to_string();
-//         async move {
-//             Ok::<_, Infallible>(service_fn(move |req| {
-//                 serve_file(req, &base_path)
-//             }))
-//         }
-//     });
-
-//     let server = Server::bind(&addr).serve(make_svc);
-
-//     println!("Listening on http://{}", addr);
-
-//     if let Err(e) = server.await {
-//         eprintln!("server error: {}", e);
-//     }
-// }
-
+    // again hardcoded in since I cba  dealing with a million different types
+    // for just a string.
+    server.listen("0.0.0.0", "8000");
+}
