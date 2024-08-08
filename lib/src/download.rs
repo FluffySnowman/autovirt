@@ -8,8 +8,33 @@ use std::io::copy;
 use std::io::Write;
 use std::error::Error;
 use reqwest::blocking::Client;
+use std::{collections::HashMap, fmt::write};
 
-pub fn download_os_image() -> Result<(), Box<dyn Error>> {
+/// Hsahmap for available images to download/use for the vm's.
+pub fn available_images() -> HashMap<&'static str, &'static str> {
+    let mut available_images = HashMap::new();
+    available_images.insert("ubuntu1804", "https://cloud-images.ubuntu.com/releases/18.04/release/ubuntu-18.04-server-cloudimg-amd64.img");
+    available_images.insert("ubuntu2004", "https://cloud-images.ubuntu.com/releases/20.04/release/ubuntu-20.04-server-cloudimg-amd64.img");
+
+    available_images
+}
+
+// available_images.insert("ubuntu2204", "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img");
+
+
+/// Downloads the image for the specified OS/distro to the isos directory in
+/// this project. This is subject to change since there will be an option for
+/// the user to specify where to download the image or the download(s) will be
+/// placed in the user's $HOME or on a system level location that is consistent
+/// across machines.
+///
+/// This takes the name of the distro as an argument and downloads whatever is
+/// needed based on which distro matches the name.
+///
+/// If there is no match there will either be an error message and/or a list of
+/// all available images and will/or will default to the ubuntu 22.04 image.
+///
+pub fn download_vm_image() -> Result<(), Box<dyn Error>> {
 
     let url = "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img";
     let file_path = "ubuntu-22.04-server-cloudimg-amd64.img";

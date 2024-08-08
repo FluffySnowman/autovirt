@@ -3,3 +3,13 @@
 lib/iso_downloads
 lib/iso_downloads/
 
+./lib/isos/
+/lib/isos/
+lib/isos/
+lib/isos
+
+./lib/_VM_DISKS/
+/lib/_VM_DISKS/
+lib/_VM_DISKS/
+lib/_VM_DISKS
+

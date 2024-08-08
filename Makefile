@@ -5,7 +5,11 @@ MAKEFLAGS += --no-print-directory
 
 # don't chang this shit
 
+# src dir for the actual code (not exclusively rust) relative to the root dir
 SRC_DIR := ./lib
+# the src dir for the rust (.rs) files (not the src dir for the rust project)
+RUST_SRC_DIR := $(SRC_DIR)/src
+IMDS_DIR := $(RUST_SRC_DIR)/conf
 TARGET_DIR := $(SRC_DIR)/target
 BIN_DIR := $(TARGET_DIR)/release
 RELEASE_BINARY_NAME := autovirt
@@ -17,6 +21,7 @@ ORIGIN_DIR := $(shell pwd)
 
 h: help
 r: run
+si: start-imds
 b: build
 t: test
 wt: watchtest
@@ -47,6 +52,12 @@ run:
 		printf "Entering Directory\t>\t$$PWD\n" ; \
 		printf "Running CMD\t\t>\t'cargo run'\n\n" ; \
 		cargo run;
+
+
+start-imds:
+	@echo "Starting IMDS w/ python..."
+	cd $(IMDS_DIR); \
+		python3 -m http.server --directory .
 
 # bld
 

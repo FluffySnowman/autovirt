@@ -3,12 +3,14 @@
 use clap::Parser;
 use clap::Subcommand;
 use tokio;
+use tokio::runtime::Runtime;
 // use std::process::Command;
 
 // project imports
 mod info;
 mod scripts;
 mod download;
+mod imds;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -35,7 +37,8 @@ enum VMCommands {
         #[arg(help = "The item to list")]
         item: String,
     },
-    /// Create a new VM based on a given distro, user/pass and name.
+    /// Create a new VM based on a given distro, user/pass and name
+    /// (cloud-init/qemu)
     Create {
         /// The name of the new virtual machine.
         #[arg(help = "Name of the VM to be created", default_value = "basicvm")]
@@ -78,12 +81,18 @@ enum VMCommands {
 async fn main() {
     let cli_arguments = Cli::parse();
 
+    // Setting imds http server params (used for cloud-init/vm config files).
+    // This includes user data, metadata and other shit.
+    let imds_addr = "0.0.0.0:8000";
+    let imds_data_dir = "./lib/src/conf/";
+
     match &cli_arguments.command {
         VMCommands::Info { name } => {
             info::get_vm_info(name);
         }
         VMCommands::List { item } => {
-            info::show_all_vms();
+            // in fo::show_all_vms();
+            download::available_images();
             _ = item;
         }
         VMCommands::Create {
@@ -94,11 +103,12 @@ async fn main() {
             pass,
             mem,
         } => {
+            // imds::run_file_server(imds_addr, imds_data_dir).await;
             scripts::create_new_vm(name, dist, size, user, pass, mem);
         }
         VMCommands::Download { dist } =>  {
             println!("Downloading OS Image for {}", dist);
-            download::download_os_image();
+            download::download_vm_image();
             println!("OS downloaded -> {}", dist);
         }
     }
