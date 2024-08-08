@@ -13,6 +13,30 @@ pub struct VMSizes {
     ram_mb: u32,
     disk_gb: u32,
 }
+
+
+/// The user-data cloud init config file (uses interpolation/regex something
+/// else) to add the user specified details- like password, username, ssh key
+/// etc.
+///
+pub const USER_DATA: &str = r#"
+#cloud-config
+users:
+  - name: fluffy
+    plain_text_passwd: fluffy
+    lock_passwd: false
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    shell: /bin/bash
+    ssh_import_id: None
+    ssh_authorized_keys:
+      - ssh-rsa eeeeeeeeeeee
+
+chpasswd:
+  expire: false
+"#;
+
+
 // ---
 // Install script (bash command) for installing the vm (copy pasted from my
 // zsh history
@@ -105,11 +129,12 @@ pub fn create_new_vm(
         println!("vm size not found");
     }
 
-    println!("Executing vm startup in 3 seconds...");
+    println!("Executing vm startup process in 3 seconds...");
     let startup_wait = time::Duration::from_secs(3);
 
     thread::sleep(startup_wait);
-    println!("Spawning new thread & Starting VM ...");
+    println!("Writing to user-data file");
+    std::fs::write("./lib/src/conf/user-data", USER_DATA).expect("failed to write user-data file");
 
     // Building command to create a vm
 

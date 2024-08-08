@@ -84,9 +84,9 @@ async fn main() {
 
     // Setting imds http server params (used for cloud-init/vm config files).
     // This includes user data, metadata and other shit.
-    let imds_listen_host = "0.0.0.0";
-    let imds_listen_port = "8000";
-    let imds_data_dir = "./lib/src/conf/";
+    let _imds_listen_host = "0.0.0.0";
+    let _imds_listen_port = "8000";
+    let _imds_data_dir = "./lib/src/conf/";
 
     // File server is run in the create command section.
 
