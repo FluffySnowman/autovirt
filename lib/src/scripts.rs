@@ -35,35 +35,6 @@ chpasswd:
 "#;
 
 
-// ---
-// Install script (bash command) for installing the vm (copy pasted from my
-// zsh history
-//
-// ```bash
-// sudo virt-install --name=ubuntutest \
-// --vcpus=4 \
-// --memory=4096 \
-// --location 'http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/' \
-// --virt-type=kvm \
-// --disk size=12 \
-// --os-variant=ubuntu18.04
-// ````
-//
-// Install script with cloud init
-//
-// ```
-// qemu-system-x86_64 \
-//     -net nic \
-//     -net user,hostfwd=tcp::2222-:22 \
-//     -machine accel=kvm:tcg \
-//     -m 512 \
-//     -nographic \
-//     -hda ubuntu-22.04-server-cloudimg-amd64.img \
-//     -smbios type=1,serial=ds='nocloud;s=http://10.0.2.2:8000/'
-// ```
-//
-// ---
-
 /// Creates a new virtual machine based on the given parameters.
 /// This takes the vm name, distro, size, username, password etc. and may even
 /// take the path of an ssh key later on as the project progress.s
@@ -152,10 +123,7 @@ pub fn create_new_vm(
         eprintln!("Command exit code: {}", disk_resize_output.status);
     }
 
-    // println!("{}", disk_resize_output.status);
-
     // Building command to create a vm
-
     let mut create_vm_cmd = std::process::Command::new("qemu-system-x86_64");
     create_vm_cmd
         .arg("-net")
@@ -194,19 +162,21 @@ pub fn create_new_vm(
             \nthe vm\nAUTOVIRT_DEBUG=1 and re-run for more info");
     }
 
-    // .arg("-net user,hostfwd::2222-:22") // networking to forward ssh-> 2222
-    // .arg("-machine accel=kvm:tcg") // kvm accelaration
-    // .arg("-m")  // amount of memory for the vm
-    // .arg(vm_memory_mb)  // user specified memory (mb)
-    // .arg("-nographic")  // no gui (runs in the current terminal)
-    // .arg("-hda ./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img")
-    // .arg("-smbios type=1,serial=ds='nocloud;s=http://10.0.2.2:8000/'");
-
-    // let vm_creation_output = create_vm_cmd
-    //     .status()
-    //     .expect("failed to create vm (cloud-init via qemu-system-x86_64)");
-    // println!("{}", vm_creation_output);
 }
+
+
+// .arg("-net user,hostfwd::2222-:22") // networking to forward ssh-> 2222
+// .arg("-machine accel=kvm:tcg") // kvm accelaration
+// .arg("-m")  // amount of memory for the vm
+// .arg(vm_memory_mb)  // user specified memory (mb)
+// .arg("-nographic")  // no gui (runs in the current terminal)
+// .arg("-hda ./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img")
+// .arg("-smbios type=1,serial=ds='nocloud;s=http://10.0.2.2:8000/'");
+
+// let vm_creation_output = create_vm_cmd
+//     .status()
+//     .expect("failed to create vm (cloud-init via qemu-system-x86_64)");
+// println!("{}", vm_creation_output);
 
 // qemu-system-x86_64 \
 //     -net nic \
@@ -244,3 +214,33 @@ pub fn create_new_vm(
     //     }
     //     None => eprintln!("no vm meta details found for whatever you put in oof"),
     // }
+
+// ---
+// Install script (bash command) for installing the vm (copy pasted from my
+// zsh history
+//
+// ```bash
+// sudo virt-install --name=ubuntutest \
+// --vcpus=4 \
+// --memory=4096 \
+// --location 'http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/' \
+// --virt-type=kvm \
+// --disk size=12 \
+// --os-variant=ubuntu18.04
+// ````
+//
+// Install script with cloud init
+//
+// ```
+// qemu-system-x86_64 \
+//     -net nic \
+//     -net user,hostfwd=tcp::2222-:22 \
+//     -machine accel=kvm:tcg \
+//     -m 512 \
+//     -nographic \
+//     -hda ubuntu-22.04-server-cloudimg-amd64.img \
+//     -smbios type=1,serial=ds='nocloud;s=http://10.0.2.2:8000/'
+// ```
+//
+// ---
+
