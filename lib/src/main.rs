@@ -3,8 +3,8 @@
 use clap::Parser;
 use clap::Subcommand;
 use tokio;
-use tokio::task;
-use tokio::runtime::Runtime;
+// use tokio::task;
+// use tokio::runtime::Runtime;
 // use std::process::Command;
 
 // project imports
@@ -122,7 +122,7 @@ async fn main() {
         }
         VMCommands::Download { dist } =>  {
             println!("Downloading OS Image for {}", dist);
-            download::download_vm_image();
+            let _ = download::download_vm_image();
             println!("OS downloaded -> {}", dist);
         }
     }

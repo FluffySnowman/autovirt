@@ -54,7 +54,7 @@ pub fn get_vm_info(vm_name: &String) {
     println!("{}", output);
 }
 
-pub fn show_all_vms() {
+pub fn _show_all_vms() {
     let mut all_vms = Command::new("virsh list --all");
     let output = all_vms.status().expect("Command Failed");
     println!("------ All Virtual Machines ------\n {}", output);

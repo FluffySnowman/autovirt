@@ -1,14 +1,11 @@
 // use std::process::Command;
-use std::{collections::HashMap, fmt::write};
 use std::thread;
 use std::time;
-use tokio::process::Command;
 
-use reqwest::Certificate;
 
 /// The VM sizes (vcpus, ram, disk etc.)
 #[derive(Debug)]
-pub struct VMSizes {
+pub struct _VMSizes {
     vcpus_num: u32,
     ram_mb: u32,
     disk_gb: u32,
@@ -112,16 +109,14 @@ pub fn create_new_vm(
     //     None => eprintln!("no vm meta details found for whatever you put in oof"),
     // }
 
-    // Printing vm details (since I'll probably forget everythnig even though
-    // its on the line right above this)
-
-    println!("\n\n------\tNew Virtual Machine Details\t------\n");
-    println!("\tVM Name: {}", vm_name);
-    println!("\tVM Dist: {}", vm_dist);
-    println!("\tVM Size: {}", vm_size);
-    println!("\tVM User: {}", vm_user);
-    println!("\tVM Pass: {}", vm_pass);
-    println!("\tUser specified memory (mb): {}", vm_memory_mb);
+    // Print vm details with ansi colours
+    println!("\x1b[0;32m------ VM Details -----\x1b[0m");
+    println!("\x1b[0;32mNAME: \x1b[0m{}", vm_name);
+    println!("\x1b[0;32mDISTRO: \x1b[0m{}", vm_dist);
+    println!("\x1b[0;32mSIZE: \x1b[0m{}", vm_size);
+    println!("\x1b[0;32mUSERNAME: \x1b[0m{}", vm_user);
+    println!("\x1b[0;32mPASSWORD: \x1b[0m{}", vm_pass);
+    println!("\x1b[0;32mMEMORY: \x1b[0m{}", vm_memory_mb);
 
     // if vm_size == "1G" {
     //     println!("vm size is 1g");
@@ -133,22 +128,41 @@ pub fn create_new_vm(
     let startup_wait = time::Duration::from_secs(3);
 
     thread::sleep(startup_wait);
-    println!("Writing to user-data file");
+    println!("\x1b[0;32mCreating VM...\x1b[0m");
+    println!("\x1b[0;32mWriting to user-data (cloud-init) file...\x1b[0m");
+    // println!("Writing to user-data (cloud-init) file...");
     std::fs::write("./lib/src/conf/user-data", USER_DATA).expect("failed to write user-data file");
 
+    // print with ansi colors
+    println!("\x1b[0;32mUser-data file written successfully\x1b[0m");
+
+    println!("\x1b[0;32mAttempting to create VM disk of size: {}...\x1b[0m", vm_size);
+    // println!("Attempting to create VM disk of size: {}...", vm_size);
     // Resizing the vm to the specified disk size (in the cli args) / creating
     // the disk.
     // Using string formatting because I don't care.
     let disk_size_amount = vm_size.parse::<u32>().unwrap();
     let disk_resize_cmd = format!("qemu-img resize ./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img +{}G", disk_size_amount);
 
+    println!("\x1b[0;32mResizing disk to {}G...\x1b[0m", vm_size);
+    // println!("Resizing disk to {}G...", vm_size);
     let disk_resize_output = std::process::Command::new("sh")
         .arg("-c")
         .arg(&disk_resize_cmd)
         .output()
         .expect("failed to resize disk");
 
-    println!("{}", disk_resize_output.status);
+    if disk_resize_output.status.success() {
+        println!("\x1b[0;32mVM disk resized slccessfully to {}G\x1b[0m", vm_size);
+        // println!("VM disk resized slccessfully to {}G", vm_size);
+    } else {
+        // print with ansi colors
+        eprintln!("\x1b[0;31mFAILED TO RESIZE DISK\x1b[0m");
+        // eprintln!("FAILED TO RESIZE DISK");
+        eprintln!("Command exit code: {}", disk_resize_output.status);
+    }
+
+    // println!("{}", disk_resize_output.status);
 
     // Building command to create a vm
 

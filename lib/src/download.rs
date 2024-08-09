@@ -5,10 +5,10 @@
 
 use std::fs::File;
 use std::io::copy;
-use std::io::Write;
+// use std::io::Write;
 use std::error::Error;
 use reqwest::blocking::Client;
-use std::{collections::HashMap, fmt::write};
+use std::collections::HashMap;
 
 /// Hsahmap for available images to download/use for the vm's.
 pub fn available_images() -> HashMap<&'static str, &'static str> {
