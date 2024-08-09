@@ -124,6 +124,8 @@ async fn main() {
 
             // imds::run_file_server(imds_addr, imds_data_dir).await;
             scripts::create_new_vm(name, dist, size, user, pass, mem, cpus);
+            // exit everythnig
+            std::process::exit(0);
         }
         VMCommands::Download { dist } =>  {
             println!("Downloading OS Image for {}", dist);

@@ -1,4 +1,3 @@
-use std::os::unix::process;
 // use std::process::Command;
 use std::thread;
 use std::time;
@@ -155,7 +154,7 @@ pub fn create_new_vm(
     let status = create_vm_cmd.status().expect("failed to exec vm craeted cmd");
 
     if status.success() {
-        println!("Process completed ? idk");
+        println!("\nAutoVirt run success 👍");
         // return;
     } else {
         eprintln!("Something went wrong or something failed to do something with
