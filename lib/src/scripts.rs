@@ -2,7 +2,6 @@
 use std::thread;
 use std::time;
 
-
 /// The VM sizes (vcpus, ram, disk etc.)
 #[derive(Debug)]
 pub struct _VMSizes {
@@ -10,7 +9,6 @@ pub struct _VMSizes {
     ram_mb: u32,
     disk_gb: u32,
 }
-
 
 /// The user-data cloud init config file (uses interpolation/regex something
 /// else) to add the user specified details- like password, username, ssh key
@@ -33,7 +31,6 @@ chpasswd:
   expire: false
 "#;
 
-
 /// Creates a new virtual machine based on the given parameters.
 /// This takes the vm name, distro, size, username, password etc. and may even
 /// take the path of an ssh key later on as the project progress.s
@@ -55,7 +52,6 @@ pub fn create_new_vm(
     vm_memory_mb: &String,
     vm_cpus: &String,
 ) {
-
     // print debug info if the user has set the AUTOVIRT_DEBUG env var to 1
     if std::env::var("AUTOVIRT_DEBUG").is_ok() {
         println!("AUTOVIRT DEBUG IS ON");
@@ -83,7 +79,6 @@ pub fn create_new_vm(
         .replace("AUTOVIRT_PASS", vm_pass)
         .replace("eeeeeeeeeeee", "your mom");
 
-
     println!("\x1b[0;32mWriting to user-data (cloud-init) file...\x1b[0m");
     // println!("Writing to user-data (cloud-init) file...");
 
@@ -91,18 +86,25 @@ pub fn create_new_vm(
     // the imds http server hence used for the creation of the vm with the
     // specified user deets (args to the cli/cmd/function).
     //
-    std::fs::write("./lib/src/conf/user-data", final_user_data).expect("failed to write user-data file");
+    std::fs::write("./lib/src/conf/user-data", final_user_data)
+        .expect("failed to write user-data file");
 
     // print with ansi colors
     println!("\x1b[0;32mUser-data file written successfully\x1b[0m");
 
-    println!("\x1b[0;32mAttempting to create VM disk of size: {}...\x1b[0m", vm_size);
+    println!(
+        "\x1b[0;32mAttempting to create VM disk of size: {}...\x1b[0m",
+        vm_size
+    );
     // println!("Attempting to create VM disk of size: {}...", vm_size);
     // Resizing the vm to the specified disk size (in the cli args) / creating
     // the disk.
     // Using string formatting because I don't care.
     let disk_size_amount = vm_size.parse::<u32>().unwrap();
-    let disk_resize_cmd = format!("qemu-img resize ./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img +{}G", disk_size_amount);
+    let disk_resize_cmd = format!(
+        "qemu-img resize ./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img +{}G",
+        disk_size_amount
+    );
 
     println!("\x1b[0;32mResizing disk to {}G...\x1b[0m", vm_size);
     // println!("Resizing disk to {}G...", vm_size);
@@ -113,7 +115,10 @@ pub fn create_new_vm(
         .expect("failed to resize disk");
 
     if disk_resize_output.status.success() {
-        println!("\x1b[0;32mVM disk resized slccessfully to {}G\x1b[0m", vm_size);
+        println!(
+            "\x1b[0;32mVM disk resized slccessfully to {}G\x1b[0m",
+            vm_size
+        );
         // println!("VM disk resized slccessfully to {}G", vm_size);
     } else {
         // print with ansi colors
@@ -143,7 +148,6 @@ pub fn create_new_vm(
         .arg("-smp")
         .arg(format!("cpus={}", vm_cpus));
 
-
     println!("\nNote: Set AUTOVIRT_DEBUG=1 to see the command to be executed\nAlong with other debug info.\n");
 
     if std::env::var("AUTOVIRT_DEBUG").is_ok() {
@@ -151,18 +155,20 @@ pub fn create_new_vm(
         println!("{:?}", create_vm_cmd);
     }
 
-    let status = create_vm_cmd.status().expect("failed to exec vm craeted cmd");
+    let status = create_vm_cmd
+        .status()
+        .expect("failed to exec vm craeted cmd");
 
     if status.success() {
         println!("\nAutoVirt run success 👍");
         // return;
     } else {
-        eprintln!("Something went wrong or something failed to do something with
-            \nthe vm\nAUTOVIRT_DEBUG=1 and re-run for more info");
+        eprintln!(
+            "Something went wrong or something failed to do something with
+            \nthe vm\nAUTOVIRT_DEBUG=1 and re-run for more info"
+        );
     }
-
 }
-
 
 // .arg("-net user,hostfwd::2222-:22") // networking to forward ssh-> 2222
 // .arg("-machine accel=kvm:tcg") // kvm accelaration
@@ -186,33 +192,31 @@ pub fn create_new_vm(
 //     -hda ubuntu-22.04-server-cloudimg-amd64.img \
 //     -smbios type=1,serial=ds='nocloud;s=http://10.0.2.2:8000/'
 
+// Creating the vm details hashmap (sizes, types, ram amount etc)
+// let mut vm_meta_details = HashMap::new();
+// vm_meta_details.insert(
+//     "1G",
+//     VMSizes {
+//         vcpus_num: 1,
+//         ram_mb: 1024,
+//         disk_gb: 25,
+//     },
+// );
 
+// let mut _vcpus_cmd_arg = "";
 
-    // Creating the vm details hashmap (sizes, types, ram amount etc)
-    // let mut vm_meta_details = HashMap::new();
-    // vm_meta_details.insert(
-    //     "1G",
-    //     VMSizes {
-    //         vcpus_num: 1,
-    //         ram_mb: 1024,
-    //         disk_gb: 25,
-    //     },
-    // );
-
-    // let mut _vcpus_cmd_arg = "";
-
-    // testing vm size prints/set/get operations
-    // match vm_meta_details.get("1G") {
-    //     Some(info) => {
-    //         println!(
-    //             "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
-    //             info.vcpus_num, info.ram_mb, info.disk_gb
-    //         );
-    //         let vcpu_printf = std::fmt::format(format_args!("--vcpus={}", info.vcpus_num));
-    //         println!("{}", vcpu_printf);
-    //     }
-    //     None => eprintln!("no vm meta details found for whatever you put in oof"),
-    // }
+// testing vm size prints/set/get operations
+// match vm_meta_details.get("1G") {
+//     Some(info) => {
+//         println!(
+//             "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
+//             info.vcpus_num, info.ram_mb, info.disk_gb
+//         );
+//         let vcpu_printf = std::fmt::format(format_args!("--vcpus={}", info.vcpus_num));
+//         println!("{}", vcpu_printf);
+//     }
+//     None => eprintln!("no vm meta details found for whatever you put in oof"),
+// }
 
 // ---
 // Install script (bash command) for installing the vm (copy pasted from my
@@ -242,4 +246,3 @@ pub fn create_new_vm(
 // ```
 //
 // ---
-
