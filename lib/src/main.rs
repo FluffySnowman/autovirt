@@ -67,6 +67,10 @@ enum VMCommands {
         /// The amount of memory in MB (Example: 512 or 1024)
         #[arg(help = "The amount of memory for the VM", default_value = "512")]
         mem: String,
+
+        /// The number of vCPU' s for the VM
+        #[arg(help = "The amount of vCPU's for the vm", default_value = "1")]
+        cpus: String,
     },
     /// Downloads a cloud-init compatible image for the specified distro.
     Download {
@@ -106,6 +110,7 @@ async fn main() {
             user,
             pass,
             mem,
+            cpus,
         } => {
             // File server is currently run with hardcoded values since the
             // compiler keeps yapping.
@@ -118,7 +123,7 @@ async fn main() {
             });
 
             // imds::run_file_server(imds_addr, imds_data_dir).await;
-            scripts::create_new_vm(name, dist, size, user, pass, mem);
+            scripts::create_new_vm(name, dist, size, user, pass, mem, cpus);
         }
         VMCommands::Download { dist } =>  {
             println!("Downloading OS Image for {}", dist);

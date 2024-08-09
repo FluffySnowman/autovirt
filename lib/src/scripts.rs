@@ -1,3 +1,4 @@
+use std::os::unix::process;
 // use std::process::Command;
 use std::thread;
 use std::time;
@@ -19,8 +20,8 @@ pub struct _VMSizes {
 pub const USER_DATA: &str = r#"
 #cloud-config
 users:
-  - name: test
-    plain_text_passwd: test
+  - name: AUTOVIRT_USER
+    plain_text_passwd: AUTOVIRT_PASS
     lock_passwd: false
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: sudo
@@ -82,32 +83,13 @@ pub fn create_new_vm(
     vm_user: &String,
     vm_pass: &String,
     vm_memory_mb: &String,
+    vm_cpus: &String,
 ) {
-    // Creating the vm details hashmap (sizes, types, ram amount etc)
-    // let mut vm_meta_details = HashMap::new();
-    // vm_meta_details.insert(
-    //     "1G",
-    //     VMSizes {
-    //         vcpus_num: 1,
-    //         ram_mb: 1024,
-    //         disk_gb: 25,
-    //     },
-    // );
 
-    // let mut _vcpus_cmd_arg = "";
-
-    // testing vm size prints/set/get operations
-    // match vm_meta_details.get("1G") {
-    //     Some(info) => {
-    //         println!(
-    //             "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
-    //             info.vcpus_num, info.ram_mb, info.disk_gb
-    //         );
-    //         let vcpu_printf = std::fmt::format(format_args!("--vcpus={}", info.vcpus_num));
-    //         println!("{}", vcpu_printf);
-    //     }
-    //     None => eprintln!("no vm meta details found for whatever you put in oof"),
-    // }
+    // print debug info if the user has set the AUTOVIRT_DEBUG env var to 1
+    if std::env::var("AUTOVIRT_DEBUG").is_ok() {
+        println!("AUTOVIRT DEBUG IS ON");
+    }
 
     // Print vm details with ansi colours
     println!("\x1b[0;32m------ VM Details -----\x1b[0m");
@@ -117,21 +99,29 @@ pub fn create_new_vm(
     println!("\x1b[0;32mUSERNAME: \x1b[0m{}", vm_user);
     println!("\x1b[0;32mPASSWORD: \x1b[0m{}", vm_pass);
     println!("\x1b[0;32mMEMORY: \x1b[0m{}", vm_memory_mb);
-
-    // if vm_size == "1G" {
-    //     println!("vm size is 1g");
-    // } else {
-    //     println!("vm size not found");
-    // }
+    println!("\x1b[0;32mVCPUS: \x1b[0m{}", vm_cpus);
 
     println!("Executing vm startup process in 3 seconds...");
     let startup_wait = time::Duration::from_secs(3);
 
     thread::sleep(startup_wait);
     println!("\x1b[0;32mCreating VM...\x1b[0m");
+
+    // Doing string replaces for the user-data for the cloud init config file.
+    let final_user_data = USER_DATA
+        .replace("AUTOVIRT_USER", vm_user)
+        .replace("AUTOVIRT_PASS", vm_pass)
+        .replace("eeeeeeeeeeee", "your mom");
+
+
     println!("\x1b[0;32mWriting to user-data (cloud-init) file...\x1b[0m");
     // println!("Writing to user-data (cloud-init) file...");
-    std::fs::write("./lib/src/conf/user-data", USER_DATA).expect("failed to write user-data file");
+
+    // Writing the cloud init user data to the user-data file which is served in
+    // the imds http server hence used for the creation of the vm with the
+    // specified user deets (args to the cli/cmd/function).
+    //
+    std::fs::write("./lib/src/conf/user-data", final_user_data).expect("failed to write user-data file");
 
     // print with ansi colors
     println!("\x1b[0;32mUser-data file written successfully\x1b[0m");
@@ -171,7 +161,7 @@ pub fn create_new_vm(
         .arg("-net")
         .arg("nic")
         .arg("-net")
-        .arg("user,hostfwd=tcp::2222-:22")
+        .arg("user,hostfwd=tcp::2222-:22") // forwarding ssh to 2222 on host
         .arg("-machine")
         .arg("accel=kvm:tcg")
         .arg("-m")
@@ -182,17 +172,26 @@ pub fn create_new_vm(
         .arg("-smbios")
         .arg(format!("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/"))
         .arg("-serial")
-        .arg("pty");
+        .arg("pty")
+        .arg("-smp")
+        .arg(format!("cpus={}", vm_cpus));
 
-    // printng cmd cos I probably messed it up
-    println!("{:?}", create_vm_cmd);
+
+    println!("\nNote: Set AUTOVIRT_DEBUG=1 to see the command to be executed\nAlong with other debug info.\n");
+
+    if std::env::var("AUTOVIRT_DEBUG").is_ok() {
+        // Printing vm creation command if debug env var is present/is '1'
+        println!("{:?}", create_vm_cmd);
+    }
 
     let status = create_vm_cmd.status().expect("failed to exec vm craeted cmd");
 
     if status.success() {
-        println!("vm started yeet");
+        println!("Process completed ? idk");
+        // return;
     } else {
-        eprintln!("failed to start vm (cloud-init with qemu)");
+        eprintln!("Something went wrong or something failed to do something with
+            \nthe vm\nAUTOVIRT_DEBUG=1 and re-run for more info");
     }
 
     // .arg("-net user,hostfwd::2222-:22") // networking to forward ssh-> 2222
@@ -217,3 +216,31 @@ pub fn create_new_vm(
 //     -nographic \
 //     -hda ubuntu-22.04-server-cloudimg-amd64.img \
 //     -smbios type=1,serial=ds='nocloud;s=http://10.0.2.2:8000/'
+
+
+
+    // Creating the vm details hashmap (sizes, types, ram amount etc)
+    // let mut vm_meta_details = HashMap::new();
+    // vm_meta_details.insert(
+    //     "1G",
+    //     VMSizes {
+    //         vcpus_num: 1,
+    //         ram_mb: 1024,
+    //         disk_gb: 25,
+    //     },
+    // );
+
+    // let mut _vcpus_cmd_arg = "";
+
+    // testing vm size prints/set/get operations
+    // match vm_meta_details.get("1G") {
+    //     Some(info) => {
+    //         println!(
+    //             "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
+    //             info.vcpus_num, info.ram_mb, info.disk_gb
+    //         );
+    //         let vcpu_printf = std::fmt::format(format_args!("--vcpus={}", info.vcpus_num));
+    //         println!("{}", vcpu_printf);
+    //     }
+    //     None => eprintln!("no vm meta details found for whatever you put in oof"),
+    // }
