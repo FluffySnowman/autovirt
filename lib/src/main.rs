@@ -53,7 +53,7 @@ enum VMCommands {
         dist: String,
 
         /// The size of the new virtual machine (1G, 2G ...)
-        #[arg(help = "The size of the new VM (1G, 2G ...)", default_value = "1G")]
+        #[arg(help = "The disk size of the new VM in GB: 10,25,30,etc.)", default_value = "10")]
         size: String,
 
         /// The suername for the VM (non-root)

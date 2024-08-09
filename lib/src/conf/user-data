@@ -1,8 +1,8 @@
 
 #cloud-config
 users:
-  - name: fluffy
-    plain_text_passwd: fluffy
+  - name: test
+    plain_text_passwd: test
     lock_passwd: false
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: sudo

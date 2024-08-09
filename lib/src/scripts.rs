@@ -22,8 +22,8 @@ pub struct VMSizes {
 pub const USER_DATA: &str = r#"
 #cloud-config
 users:
-  - name: fluffy
-    plain_text_passwd: fluffy
+  - name: test
+    plain_text_passwd: test
     lock_passwd: false
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: sudo
@@ -87,30 +87,30 @@ pub fn create_new_vm(
     vm_memory_mb: &String,
 ) {
     // Creating the vm details hashmap (sizes, types, ram amount etc)
-    let mut vm_meta_details = HashMap::new();
-    vm_meta_details.insert(
-        "1G",
-        VMSizes {
-            vcpus_num: 1,
-            ram_mb: 1024,
-            disk_gb: 25,
-        },
-    );
+    // let mut vm_meta_details = HashMap::new();
+    // vm_meta_details.insert(
+    //     "1G",
+    //     VMSizes {
+    //         vcpus_num: 1,
+    //         ram_mb: 1024,
+    //         disk_gb: 25,
+    //     },
+    // );
 
-    let mut _vcpus_cmd_arg = "";
+    // let mut _vcpus_cmd_arg = "";
 
     // testing vm size prints/set/get operations
-    match vm_meta_details.get("1G") {
-        Some(info) => {
-            println!(
-                "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
-                info.vcpus_num, info.ram_mb, info.disk_gb
-            );
-            let vcpu_printf = std::fmt::format(format_args!("--vcpus={}", info.vcpus_num));
-            println!("{}", vcpu_printf);
-        }
-        None => eprintln!("no vm meta details found for whatever you put in oof"),
-    }
+    // match vm_meta_details.get("1G") {
+    //     Some(info) => {
+    //         println!(
+    //             "Virtual machine meta info -> VCPS: {:1} RAM (mb): {} DISK (gb): {}  ",
+    //             info.vcpus_num, info.ram_mb, info.disk_gb
+    //         );
+    //         let vcpu_printf = std::fmt::format(format_args!("--vcpus={}", info.vcpus_num));
+    //         println!("{}", vcpu_printf);
+    //     }
+    //     None => eprintln!("no vm meta details found for whatever you put in oof"),
+    // }
 
     // Printing vm details (since I'll probably forget everythnig even though
     // its on the line right above this)
@@ -123,11 +123,11 @@ pub fn create_new_vm(
     println!("\tVM Pass: {}", vm_pass);
     println!("\tUser specified memory (mb): {}", vm_memory_mb);
 
-    if vm_size == "1G" {
-        println!("vm size is 1g");
-    } else {
-        println!("vm size not found");
-    }
+    // if vm_size == "1G" {
+    //     println!("vm size is 1g");
+    // } else {
+    //     println!("vm size not found");
+    // }
 
     println!("Executing vm startup process in 3 seconds...");
     let startup_wait = time::Duration::from_secs(3);
@@ -135,6 +135,20 @@ pub fn create_new_vm(
     thread::sleep(startup_wait);
     println!("Writing to user-data file");
     std::fs::write("./lib/src/conf/user-data", USER_DATA).expect("failed to write user-data file");
+
+    // Resizing the vm to the specified disk size (in the cli args) / creating
+    // the disk.
+    // Using string formatting because I don't care.
+    let disk_size_amount = vm_size.parse::<u32>().unwrap();
+    let disk_resize_cmd = format!("qemu-img resize ./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img +{}G", disk_size_amount);
+
+    let disk_resize_output = std::process::Command::new("sh")
+        .arg("-c")
+        .arg(&disk_resize_cmd)
+        .output()
+        .expect("failed to resize disk");
+
+    println!("{}", disk_resize_output.status);
 
     // Building command to create a vm
 
