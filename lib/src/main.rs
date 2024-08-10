@@ -42,34 +42,36 @@ enum VMCommands {
     /// (cloud-init/qemu)
     Create {
         /// The name of the new virtual machine.
-        #[arg(help = "Name of the VM to be created", default_value = "basicvm")]
+        #[arg(short, long, help = "Name of the VM to be created", default_value = "basicvm")]
         name: String,
 
         /// The distribution (linux distro) of the VM to create.
         #[arg(
+            short,
+            long,
             help = "Distro of the VM to create (see options with \n`autovirt show available`)",
             default_value = "ubuntu2204"
         )]
         dist: String,
 
         /// The size of the new virtual machine (1G, 2G ...)
-        #[arg(help = "The disk size of the new VM in GB: 10,25,30,etc.)", default_value = "10")]
+        #[arg(short, long, help = "The disk size of the new VM in GB: 10,25,30,etc.)", default_value = "10")]
         size: String,
 
         /// The suername for the VM (non-root)
-        #[arg(help = "The username for the VM", default_value = "fluffy")]
+        #[arg(short, long, help = "The username for the VM", default_value = "fluffy")]
         user: String,
 
         /// The password for the VM (non-root)
-        #[arg(help = "The Password for the VM", default_value = "123456")]
+        #[arg(short, long, help = "The Password for the VM", default_value = "123456")]
         pass: String,
 
         /// The amount of memory in MB (Example: 512 or 1024)
-        #[arg(help = "The amount of memory for the VM", default_value = "512")]
+        #[arg(short, long, help = "The amount of memory for the VM", default_value = "512")]
         mem: String,
 
         /// The number of vCPU' s for the VM
-        #[arg(help = "The amount of vCPU's for the vm", default_value = "1")]
+        #[arg(short, long, help = "The amount of vCPU's for the vm", default_value = "1")]
         cpus: String,
     },
     /// Downloads a cloud-init compatible image for the specified distro.
@@ -92,6 +94,9 @@ async fn main() {
     let _imds_listen_port = "8000";
     let _imds_data_dir = "./lib/src/conf/";
 
+    // Init the distro image list
+    download::init_available_images();
+
     // File server is run in the create command section.
 
     match &cli_arguments.command {
@@ -100,7 +105,8 @@ async fn main() {
         }
         VMCommands::List { item } => {
             // in fo::show_all_vms();
-            download::available_images();
+            // download::available_images();
+            println!("listing available images");
             _ = item;
         }
         VMCommands::Create {
@@ -128,9 +134,7 @@ async fn main() {
             std::process::exit(0);
         }
         VMCommands::Download { dist } =>  {
-            println!("Downloading OS Image for {}", dist);
-            let _ = download::download_vm_image();
-            println!("OS downloaded -> {}", dist);
+            let _ = download::download_vm_image(&dist.to_string());
         }
     }
 }
