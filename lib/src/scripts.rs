@@ -66,6 +66,7 @@ pub fn create_new_vm(
     println!("\x1b[0;32mPASSWORD: \x1b[0m{}", vm_pass);
     println!("\x1b[0;32mMEMORY: \x1b[0m{}", vm_memory_mb);
     println!("\x1b[0;32mVCPUS: \x1b[0m{}", vm_cpus);
+    println!("\x1b[0;32m-----------------------\x1b[0m");
 
     println!("Executing vm startup process in 3 seconds...");
     let startup_wait = time::Duration::from_secs(3);
@@ -100,9 +101,18 @@ pub fn create_new_vm(
     // Resizing the vm to the specified disk size (in the cli args) / creating
     // the disk.
     // Using string formatting because I don't care.
+
+    // FIX:
+    // fix vm resize command since it will append more gb's to the disk if
+    // the same disk is used
+    //
+    // TODO:
+    // fix this shit bruh
+    //
+
     let disk_size_amount = vm_size.parse::<u32>().unwrap();
     let disk_resize_cmd = format!(
-        "qemu-img resize ./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img +{}G",
+        "qemu-img resize ubuntu2204-server-cloudimg-amd64.img +{}G",
         disk_size_amount
     );
 
@@ -140,7 +150,7 @@ pub fn create_new_vm(
         .arg(&vm_memory_mb)
         .arg("-nographic")
         .arg("-hda")
-        .arg("./lib/iso_downloads/ubuntu-22.04-server-cloudimg-amd64.img")
+        .arg("ubuntu2204-server-cloudimg-amd64.img")
         .arg("-smbios")
         .arg(format!("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/"))
         .arg("-serial")
