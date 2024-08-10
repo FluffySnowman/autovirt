@@ -12,6 +12,7 @@ mod info;
 mod scripts;
 mod download;
 mod imds;
+mod fs;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -134,6 +135,9 @@ async fn main() {
             std::process::exit(0);
         }
         VMCommands::Download { dist } =>  {
+            // let test_dir = fs::get_autovirt_data_dir();
+            // println!("returned user data directory: {:?}", test_dir);
+            // _ = dist;
             let _ = download::download_vm_image(&dist.to_string());
         }
     }

@@ -62,7 +62,9 @@ pub fn download_vm_image(distro: &String) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let file_path = format!("{}-server-cloudimg-amd64.img", distro);
+    // getting the user's home diretory
+
+    let file_path = format!("{}-autovirt.img", distro);
 
     let client = Client::new();
 
