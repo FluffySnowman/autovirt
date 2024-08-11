@@ -24,6 +24,7 @@ const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
         }
     },
     "downloaded_images": {},
+    notshit
     "vms": {}
 }
 "#;

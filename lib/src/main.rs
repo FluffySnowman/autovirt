@@ -26,8 +26,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum VMCommands {
-    /// Initialises & installs autovirt for the current user (using $HOME)
+    /// Populates config files with data required for autovirt to work.
     Init { },
+    /// Creates config files and data directory(s) for autovirt.
+    Install { },
     /// Gets info & details about VMs and networks (qemu).
     Info {
         #[arg(
@@ -107,6 +109,27 @@ async fn main() {
     // File server is run in the create command section.
 
     match &cli_arguments.command {
+        VMCommands::Install {  } => {
+            println!("WARNING:: ONLY RUN THIS COMMAND ONCE.");
+            println!("WARNING:: IF YOU HAVE ALREADY RUN THIS COMMAND THEN IT WILL OVERWRITE");
+            println!("WARNING:: THE EXISTING DATA DIRECTORY AND WILL CAUSE DATA LOSS.");
+            println!("Proceed with installation? [yes/No] ");
+            let mut proceed_prompt = String::new();
+            if { std::io::stdin().read_line(&mut proceed_prompt).unwrap(); proceed_prompt.trim().eq_ignore_ascii_case("yes") } {
+                println!("INFO:: installing autovirt...");
+                println!("INFO:: Creating data directories for autovirt...");
+                match filesystem::create_autovirt_data_dir() {
+                    Ok(()) => {
+                        println!("SUCCESS: Autovirt data directory created successfully");
+                    },
+                    Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
+                }
+
+            } else {
+               println!("ABORTED AUTOVIRT INSTALLATION");
+            }
+
+        }
         VMCommands::Init {  } => {
 
             // let test_img: String = "ubuntu2204".to_string();
@@ -114,14 +137,7 @@ async fn main() {
             // Testing shit
             // let _ = filesystem::insert_autovirt_config_data();
 
-            match filesystem::create_autovirt_data_dir() {
-                Ok(()) => {
-                    println!("SUCCESS: Autovirt data directory created successfully");
-                    println!("INFO: Inserting autovirt config data to config file in data directory...");
-                    let _ = filesystem::insert_autovirt_config_data();
-                },
-                Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
-            }
+            println!("INFO:: INitialising autovirt config data");
         },
         VMCommands::Info { name } => {
             info::get_vm_info(name);
