@@ -1,6 +1,9 @@
+use std::fmt::format;
 // use std::process::Command;
 use std::thread;
 use std::time;
+
+use crate::filesystem;
 
 /// The VM sizes (vcpus, ram, disk etc.)
 #[derive(Debug)]
@@ -68,11 +71,31 @@ pub fn create_new_vm(
     println!("\x1b[0;32mVCPUS: \x1b[0m{}", vm_cpus);
     println!("\x1b[0;32m-----------------------\x1b[0m");
 
-    println!("Executing vm startup process in 3 seconds...");
+    println!("LOG:: Adding VM metadata to autovirt config...");
+
+    // Adding all the vm details to the autovirt config
+    let vm_metadata = format!(
+        r#"{{
+            "name": "{}",
+            "distro": "{}",
+            "size": "{}",
+            "memory_mb": "{}",
+            "cpus": "{}"
+        }}"#,
+        vm_name, vm_dist, vm_size, vm_memory_mb, vm_cpus
+    );
+
+    // insertingt the vm metadat to the autovirt config
+    filesystem::insert_value_into_autovirt_json(
+        &format!("vms.{}", vm_name),
+        &vm_metadata,
+    );
+
+    println!("LOG:: Executing vm startup process in 3 seconds...");
     let startup_wait = time::Duration::from_secs(3);
 
     thread::sleep(startup_wait);
-    println!("\x1b[0;32mCreating VM...\x1b[0m");
+    println!("\x1b[0;32mLOG:: Creating VM...\x1b[0m");
 
     // Doing string replaces for the user-data for the cloud init config file.
     let final_user_data = USER_DATA
@@ -80,7 +103,7 @@ pub fn create_new_vm(
         .replace("AUTOVIRT_PASS", vm_pass)
         .replace("eeeeeeeeeeee", "your mom");
 
-    println!("\x1b[0;32mWriting to user-data (cloud-init) file...\x1b[0m");
+    println!("\x1b[0;32mLOG:: Writing to user-data (cloud-init) file...\x1b[0m");
     // println!("Writing to user-data (cloud-init) file...");
 
     // Writing the cloud init user data to the user-data file which is served in
@@ -91,10 +114,10 @@ pub fn create_new_vm(
         .expect("failed to write user-data file");
 
     // print with ansi colors
-    println!("\x1b[0;32mUser-data file written successfully\x1b[0m");
+    println!("\x1b[0;32mLOG:: User-data file written successfully\x1b[0m");
 
     println!(
-        "\x1b[0;32mAttempting to create VM disk of size: {}...\x1b[0m",
+        "\x1b[0;32mLOG:: Attempting to create VM disk of size: {}...\x1b[0m",
         vm_size
     );
     // println!("Attempting to create VM disk of size: {}...", vm_size);
@@ -112,11 +135,11 @@ pub fn create_new_vm(
 
     let disk_size_amount = vm_size.parse::<u32>().unwrap();
     let disk_resize_cmd = format!(
-        "qemu-img resize ubuntu2004-autovirt.img +{}G",
+        "qemu-img resize /home/fluffy/.autovirt/_data/downloads/ubuntu-22.04-autovirt-server-cloudimg-amd64.img +{}G",
         disk_size_amount
     );
 
-    println!("\x1b[0;32mResizing disk to {}G...\x1b[0m", vm_size);
+    println!("\x1b[0;32mLOG:: Resizing disk to {}G...\x1b[0m", vm_size);
     // println!("Resizing disk to {}G...", vm_size);
     let disk_resize_output = std::process::Command::new("sh")
         .arg("-c")
@@ -126,15 +149,15 @@ pub fn create_new_vm(
 
     if disk_resize_output.status.success() {
         println!(
-            "\x1b[0;32mVM disk resized slccessfully to {}G\x1b[0m",
+            "\x1b[0;32mLOG:: VM disk resized slccessfully to {}G\x1b[0m",
             vm_size
         );
         // println!("VM disk resized slccessfully to {}G", vm_size);
     } else {
         // print with ansi colors
-        eprintln!("\x1b[0;31mFAILED TO RESIZE DISK\x1b[0m");
+        eprintln!("\x1b[0;31mERROR:: FAILED TO RESIZE DISK\x1b[0m");
         // eprintln!("FAILED TO RESIZE DISK");
-        eprintln!("Command exit code: {}", disk_resize_output.status);
+        eprintln!("ERROR:: Command exit code: {}", disk_resize_output.status);
     }
 
     // Building command to create a vm
@@ -150,7 +173,7 @@ pub fn create_new_vm(
         .arg(&vm_memory_mb)
         .arg("-nographic")
         .arg("-hda")
-        .arg("ubuntu2004-autovirt.img")
+        .arg("/home/fluffy/.autovirt/_data/downloads/ubuntu-22.04-autovirt-server-cloudimg-amd64.img")
         .arg("-smbios")
         .arg(format!("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/"))
         .arg("-serial")
@@ -162,19 +185,19 @@ pub fn create_new_vm(
 
     if std::env::var("AUTOVIRT_DEBUG").is_ok() {
         // Printing vm creation command if debug env var is present/is '1'
-        println!("{:?}", create_vm_cmd);
+        println!("INFO:: {:?}", create_vm_cmd);
     }
 
     let status = create_vm_cmd
         .status()
-        .expect("failed to exec vm craeted cmd");
+        .expect("ERROR:: failed to exec vm craeted cmd");
 
     if status.success() {
-        println!("\nAutoVirt run success 👍");
+        println!("\nLOG:: AutoVirt run success 👍");
         // return;
     } else {
         eprintln!(
-            "Something went wrong or something failed to do something with
+            "ERROR:: Something went wrong or something failed to do something with
             \nthe vm\nAUTOVIRT_DEBUG=1 and re-run for more info"
         );
     }

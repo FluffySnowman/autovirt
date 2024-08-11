@@ -175,7 +175,12 @@ pub fn get_value_from_autovirt_json(key: &str) -> Option<Value> {
         .cloned()
 }
 
-
+/// Function to insert a key/value to the autovirt config file.
+///
+/// This adds a basic key/value to the autovirt.json file in the autovirt data
+/// directory at `$HOME/.autovirt/autovirt.json`
+///
+/// ---
 pub fn insert_value_into_autovirt_json(key: &str, value: &str) {
     let file_path = get_autovirt_json_path();
 
