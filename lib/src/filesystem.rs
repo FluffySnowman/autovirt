@@ -206,3 +206,29 @@ pub fn insert_value_into_autovirt_json(key: &str, value: &str) {
     fs::write(&file_path, serde_json::to_string_pretty(&v).unwrap()).expect("Failed to write to file");
 }
 
+
+/// Same function as above but for json objects ig since the function above is
+/// writing newlines `\n` for some reason.
+///
+/// ---
+pub fn insert_value_into_autovirt_json_object(key: &str, value: Value) {
+    let file_path = get_autovirt_json_path();
+
+    let file_content = fs::read_to_string(&file_path).unwrap_or_else(|_| "{}".to_string());
+    let mut v: Value = serde_json::from_str(&file_content).unwrap_or_else(|_| json!({}));
+
+    let keys: Vec<&str> = key.split('.').collect();
+    let mut current = &mut v;
+
+    for k in keys.iter().take(keys.len() - 1) {
+        if !current[k].is_object() {
+            current[k] = json!({});
+        }
+        current = current.get_mut(k).unwrap();
+    }
+
+    current[keys[keys.len() - 1]] = value;
+
+    fs::write(&file_path, serde_json::to_string_pretty(&v).unwrap()).expect("Failed to write to file");
+}
+

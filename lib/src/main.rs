@@ -98,6 +98,8 @@ enum VMCommands {
         #[arg(help = "The file to get the checksum of")]
         file: String,
     },
+    /// Checks autovirt config file for errors & downloaded vm checksums
+    Health { }
 }
 
 #[tokio::main]
@@ -204,6 +206,9 @@ async fn main() {
         }
         VMCommands::Checksum { file } => {
             vmutils::get_image_checksum(file);
+        }
+        VMCommands::Health {  } => {
+            println!("Checking autovirt data and config file for errors and checksums for vms...");
         }
     }
 }

@@ -74,21 +74,20 @@ pub fn create_new_vm(
     println!("LOG:: Adding VM metadata to autovirt config...");
 
     // Adding all the vm details to the autovirt config
-    let vm_metadata = format!(
-        r#"{{
-            "name": "{}",
-            "distro": "{}",
-            "size": "{}",
-            "memory_mb": "{}",
-            "cpus": "{}"
-        }}"#,
-        vm_name, vm_dist, vm_size, vm_memory_mb, vm_cpus
-    );
+    let vm_metadata = serde_json::json!({
+        "name": vm_name,
+        "distro": vm_dist,
+        "size": vm_size,
+        "user": vm_user,
+        "password": vm_pass,
+        "memory_mb": vm_memory_mb,
+        "cpus": vm_cpus,
+    });
 
     // insertingt the vm metadat to the autovirt config
-    filesystem::insert_value_into_autovirt_json(
+    filesystem::insert_value_into_autovirt_json_object(
         &format!("vms.{}", vm_name),
-        &vm_metadata,
+        vm_metadata,
     );
 
     println!("LOG:: Executing vm startup process in 3 seconds...");
