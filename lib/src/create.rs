@@ -46,6 +46,10 @@ chpasswd:
 /// scripts::create_new_vm("new vm", "ubuntu2204", "1G", "fluffy", "verystrongpassword");
 /// ```
 ///
+use std::fs;
+use std::process::Command;
+use std::time::Duration;
+
 pub fn create_new_vm(
     vm_name: &String,
     vm_dist: &String,
@@ -55,12 +59,12 @@ pub fn create_new_vm(
     vm_memory_mb: &String,
     vm_cpus: &String,
 ) {
-    // print debug info if the user has set the AUTOVIRT_DEBUG env var to 1
+    // Print debug info if the user has set the AUTOVIRT_DEBUG env var to 1
     if std::env::var("AUTOVIRT_DEBUG").is_ok() {
         println!("AUTOVIRT DEBUG IS ON");
     }
 
-    // Print vm details with ansi colours
+    // Print VM details with ANSI colors
     println!("\x1b[0;32m------ VM Details -----\x1b[0m");
     println!("\x1b[0;32mNAME: \x1b[0m{}", vm_name);
     println!("\x1b[0;32mDISTRO: \x1b[0m{}", vm_dist);
@@ -71,9 +75,25 @@ pub fn create_new_vm(
     println!("\x1b[0;32mVCPUS: \x1b[0m{}", vm_cpus);
     println!("\x1b[0;32m-----------------------\x1b[0m");
 
-    println!("LOG:: Adding VM metadata to autovirt config...");
+    // Fetch the filename for the specified distro
+    let distro_filename = filesystem::get_value_from_autovirt_json(&format!("images.{}.filename", vm_dist))
+        .and_then(|v| v.as_str().map(String::from))
+        .expect("ERROR: Could not find the filename for the specified distro");
 
-    // Adding all the vm details to the autovirt config
+    // Construct the full path for the VM image to be created in the _VMS directory
+    let vms_dir = filesystem::get_autovirt_data_dir().unwrap().join("_VMS");
+    fs::create_dir_all(&vms_dir).expect("ERROR: Could not create _VMS directory");
+
+    let vm_image_name = format!("{}-autovirt-{}", vm_name, distro_filename);
+    let vm_image_path = vms_dir.join(&vm_image_name);
+
+    // Copy the base distro image to the _VMS directory with the new VM name
+    let base_image_path = filesystem::get_autovirt_data_dir().unwrap().join("_data/downloads").join(distro_filename);
+    fs::copy(&base_image_path, &vm_image_path).expect("ERROR: Failed to copy base image to _VMS directory");
+
+    println!("LOG:: VM image copied to: {:?}", vm_image_path);
+
+    // Add the VM details to the autovirt config, including the VM image path
     let vm_metadata = serde_json::json!({
         "name": vm_name,
         "distro": vm_dist,
@@ -82,18 +102,16 @@ pub fn create_new_vm(
         "password": vm_pass,
         "memory_mb": vm_memory_mb,
         "cpus": vm_cpus,
+        "image_path": vm_image_path.to_string_lossy(),
     });
 
-    // insertingt the vm metadat to the autovirt config
     filesystem::insert_value_into_autovirt_json_object(
         &format!("vms.{}", vm_name),
         vm_metadata,
     );
 
-    println!("LOG:: Executing vm startup process in 3 seconds...");
-    let startup_wait = time::Duration::from_secs(3);
-
-    thread::sleep(startup_wait);
+    println!("LOG:: Executing VM startup process in 3 seconds...");
+    thread::sleep(Duration::from_secs(3));
     println!("\x1b[0;32mLOG:: Creating VM...\x1b[0m");
 
     // Doing string replaces for the user-data for the cloud init config file.
@@ -103,76 +121,45 @@ pub fn create_new_vm(
         .replace("eeeeeeeeeeee", "your mom");
 
     println!("\x1b[0;32mLOG:: Writing to user-data (cloud-init) file...\x1b[0m");
-    // println!("Writing to user-data (cloud-init) file...");
-
-    // Writing the cloud init user data to the user-data file which is served in
-    // the imds http server hence used for the creation of the vm with the
-    // specified user deets (args to the cli/cmd/function).
-    //
     std::fs::write("./lib/src/conf/user-data", final_user_data)
-        .expect("failed to write user-data file");
-
-    // print with ansi colors
+        .expect("ERROR: Failed to write user-data file");
     println!("\x1b[0;32mLOG:: User-data file written successfully\x1b[0m");
 
-    println!(
-        "\x1b[0;32mLOG:: Attempting to create VM disk of size: {}...\x1b[0m",
-        vm_size
-    );
-    // println!("Attempting to create VM disk of size: {}...", vm_size);
-    // Resizing the vm to the specified disk size (in the cli args) / creating
-    // the disk.
-    // Using string formatting because I don't care.
-
-    // FIX:
-    // fix vm resize command since it will append more gb's to the disk if
-    // the same disk is used
-    //
-    // TODO:
-    // fix this shit bruh
-    //
-
+    // Resizing the VM disk to the specified size (in the cli args)
     let disk_size_amount = vm_size.parse::<u32>().unwrap();
     let disk_resize_cmd = format!(
-        "qemu-img resize /home/fluffy/.autovirt/_data/downloads/ubuntu-22.04-autovirt-server-cloudimg-amd64.img +{}G",
-        disk_size_amount
+        "qemu-img resize {:?} +{}G",
+        vm_image_path, disk_size_amount
     );
 
     println!("\x1b[0;32mLOG:: Resizing disk to {}G...\x1b[0m", vm_size);
-    // println!("Resizing disk to {}G...", vm_size);
-    let disk_resize_output = std::process::Command::new("sh")
+    let disk_resize_output = Command::new("sh")
         .arg("-c")
         .arg(&disk_resize_cmd)
         .output()
-        .expect("failed to resize disk");
+        .expect("ERROR: Failed to resize disk");
 
     if disk_resize_output.status.success() {
-        println!(
-            "\x1b[0;32mLOG:: VM disk resized slccessfully to {}G\x1b[0m",
-            vm_size
-        );
-        // println!("VM disk resized slccessfully to {}G", vm_size);
+        println!("\x1b[0;32mLOG:: VM disk resized successfully to {}G\x1b[0m", vm_size);
     } else {
-        // print with ansi colors
         eprintln!("\x1b[0;31mERROR:: FAILED TO RESIZE DISK\x1b[0m");
-        // eprintln!("FAILED TO RESIZE DISK");
         eprintln!("ERROR:: Command exit code: {}", disk_resize_output.status);
     }
 
-    // Building command to create a vm
-    let mut create_vm_cmd = std::process::Command::new("qemu-system-x86_64");
+    // Building command to create a VM
+    let mut create_vm_cmd = Command::new("qemu-system-x86_64");
     create_vm_cmd
         .arg("-net")
         .arg("nic")
         .arg("-net")
-        .arg("user,hostfwd=tcp::2222-:22") // forwarding ssh to 2222 on host
+        .arg("user,hostfwd=tcp::2222-:22") // forwarding SSH to 2222 on host
         .arg("-machine")
         .arg("accel=kvm:tcg")
         .arg("-m")
-        .arg(&vm_memory_mb)
+        .arg(vm_memory_mb)
         .arg("-nographic")
         .arg("-hda")
-        .arg("/home/fluffy/.autovirt/_data/downloads/ubuntu-22.04-autovirt-server-cloudimg-amd64.img")
+        .arg(&vm_image_path)
         .arg("-smbios")
         .arg(format!("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/"))
         .arg("-serial")
@@ -189,15 +176,14 @@ pub fn create_new_vm(
 
     let status = create_vm_cmd
         .status()
-        .expect("ERROR:: failed to exec vm craeted cmd");
+        .expect("ERROR:: failed to exec VM creation command");
 
     if status.success() {
-        println!("\nLOG:: AutoVirt run success 👍");
-        // return;
+        println!("\nLOG:: AutoVirt VM creation success 👍");
     } else {
         eprintln!(
             "ERROR:: Something went wrong or something failed to do something with
-            \nthe vm\nAUTOVIRT_DEBUG=1 and re-run for more info"
+            \nthe VM\nAUTOVIRT_DEBUG=1 and re-run for more info"
         );
     }
 }
