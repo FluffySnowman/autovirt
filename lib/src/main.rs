@@ -26,6 +26,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum VMCommands {
+    /// Initialises & installs autovirt for the current user (using $HOME)
+    Init { },
     /// Gets info & details about VMs and networks (qemu).
     Info {
         #[arg(
@@ -74,6 +76,10 @@ enum VMCommands {
         /// The number of vCPU' s for the VM
         #[arg(short, long, help = "The amount of vCPU's for the vm", default_value = "1")]
         cpus: String,
+
+        // /// The path to an already existing image (.img cloud init file)
+        // #[arg(short, long, help = "Path to existing cloud init .img file", default_value = "1")]
+        // path: String,
     },
     /// Downloads a cloud-init compatible image for the specified distro.
     Download {
@@ -101,6 +107,12 @@ async fn main() {
     // File server is run in the create command section.
 
     match &cli_arguments.command {
+        VMCommands::Init {  } => {
+            match fs::create_autovirt_data_dir() {
+                Ok(()) => println!("SUCCESS: Autovirt data directory created successfully"),
+                Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
+            }
+        },
         VMCommands::Info { name } => {
             info::get_vm_info(name);
         }
@@ -135,10 +147,8 @@ async fn main() {
             std::process::exit(0);
         }
         VMCommands::Download { dist } =>  {
-            // let test_dir = fs::get_autovirt_data_dir();
-            // println!("returned user data directory: {:?}", test_dir);
-            // _ = dist;
-            let _ = download::download_vm_image(&dist.to_string());
+            _ = dist;
+            // let _ = download::download_vm_image(&dist.to_string());
         }
     }
 }

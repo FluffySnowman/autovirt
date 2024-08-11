@@ -112,7 +112,7 @@ pub fn create_new_vm(
 
     let disk_size_amount = vm_size.parse::<u32>().unwrap();
     let disk_resize_cmd = format!(
-        "qemu-img resize ubuntu2204-server-cloudimg-amd64.img +{}G",
+        "qemu-img resize ubuntu2004-autovirt.img +{}G",
         disk_size_amount
     );
 
@@ -150,7 +150,7 @@ pub fn create_new_vm(
         .arg(&vm_memory_mb)
         .arg("-nographic")
         .arg("-hda")
-        .arg("ubuntu2204-server-cloudimg-amd64.img")
+        .arg("ubuntu2004-autovirt.img")
         .arg("-smbios")
         .arg(format!("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/"))
         .arg("-serial")

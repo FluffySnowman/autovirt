@@ -4,8 +4,8 @@ use std::error::Error;
 use reqwest::blocking::Client;
 use std::collections::HashMap;
 
-/// Define the data directory to store all the ISOs in.
-pub const AUTOVIRT_DATA_DIR: &str = "lib/_data/";
+/// DATA DIRECTORY IS NOW IN THE FS.RS FILE AND IS AT ~/.autovirt
+// pub const AUTOVIRT_DATA_DIR: &str = "lib/_data/";
 
 /// Hashmap for all supported images
 static mut AVAILABLE_IMAGES: Option<HashMap<&'static str, &'static str>> = None;

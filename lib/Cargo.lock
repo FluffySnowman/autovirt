@@ -121,6 +121,7 @@ dependencies = [
  "axum",
  "clap",
  "hyper 1.4.1",
+ "log 0.4.22",
  "reqwest",
  "simple-server",
  "tokio",
