@@ -1,3 +1,18 @@
+//! This file contains functions related to downloading virtual machines and
+//! other related files which are not present in the project or embedded into
+//! the binary.
+//!
+//! Most of the things in this function use things from the filesystem.rs file
+//! and the autovirt.json config flie present in the user's
+//! `$HOME/.autovirt/autovirt.json` folder/file.
+//!
+//! The main downloads for the vms are placed in the
+//! `$HOME/.autovirt/_data/downloads/` directory and are then used to create
+//! vm's in other places etc.
+//!
+//! ---
+
+
 use reqwest::blocking::Client;
 use std::collections::HashMap;
 use std::error::Error;

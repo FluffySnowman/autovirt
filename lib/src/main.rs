@@ -13,6 +13,7 @@ mod scripts;
 mod download;
 mod imds;
 mod filesystem;
+mod vmutils;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -90,7 +91,13 @@ enum VMCommands {
             help = "The VM Image (cloud init/qemu) to download.\nSee `autovirt show available` for a full list\nof available images to download.",
         )]
         dist: String,
-    }
+    },
+    /// Gets the checksum of a specified file/image.
+    Checksum {
+        /// The file to get the checksum of
+        #[arg(help = "The file to get the checksum of")]
+        file: String,
+    },
 }
 
 #[tokio::main]
@@ -194,6 +201,9 @@ async fn main() {
             let _ = download::download_vm_image(dist);
 
             // let _ = download::download_vm_image(&dist.to_string());
+        }
+        VMCommands::Checksum { file } => {
+            vmutils::get_image_checksum(file);
         }
     }
 }
