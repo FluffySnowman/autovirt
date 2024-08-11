@@ -1,8 +1,8 @@
-use std::fs::File;
-use std::io::copy;
-use std::error::Error;
 use reqwest::blocking::Client;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fs::File;
+use std::io::copy;
 
 /// DATA DIRECTORY IS NOW IN THE FS.RS FILE AND IS AT ~/.autovirt
 // pub const AUTOVIRT_DATA_DIR: &str = "lib/_data/";
@@ -96,7 +96,7 @@ pub fn download_vm_image(distro: &String) -> Result<(), Box<dyn Error>> {
         eprintln!("ERROR: failed to download -> {}", response.status());
         return Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::Other,
-            format!("ERROR: some HTTP error -> {}", response.status())
+            format!("ERROR: some HTTP error -> {}", response.status()),
         )));
     }
 
