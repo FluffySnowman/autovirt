@@ -108,10 +108,14 @@ async fn main() {
 
     match &cli_arguments.command {
         VMCommands::Init {  } => {
-            match filesystem::create_autovirt_data_dir() {
-                Ok(()) => println!("SUCCESS: Autovirt data directory created successfully"),
-                Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
-            }
+
+            // Testing shit
+            let _ = filesystem::insert_autovirt_config_data();
+
+            // match filesystem::create_autovirt_data_dir() {
+            //     Ok(()) => println!("SUCCESS: Autovirt data directory created successfully"),
+            //     Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
+            // }
         },
         VMCommands::Info { name } => {
             info::get_vm_info(name);
