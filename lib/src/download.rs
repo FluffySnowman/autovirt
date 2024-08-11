@@ -10,6 +10,8 @@ use std::io::copy;
 /// Hashmap for all supported images
 static mut AVAILABLE_IMAGES: Option<HashMap<&'static str, &'static str>> = None;
 
+/// THIS FUNCTION IS NOT USED SINCE NOW ALL THE DATA IS STORED IN A JSON FILE.
+/// See filesystem.rs for more info
 /// INit available images hashmap
 pub fn init_available_images() {
     unsafe {

@@ -187,7 +187,11 @@ async fn main() {
             std::process::exit(0);
         }
         VMCommands::Download { dist } =>  {
-            _ = dist;
+            let distro_link = filesystem::get_value_from_autovirt_json(&format!("images.{}.link", dist));
+            match distro_link {
+                Some(link) => println!("Fetched download link for {}: -> {}", dist, link.as_str().unwrap_or("Invalid link")),
+                None => println!("ERROR: Could not find a download link for istro -> {}", dist),
+            }
             // let _ = download::download_vm_image(&dist.to_string());
         }
     }

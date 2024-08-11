@@ -1,9 +1,9 @@
+use serde_json::{Result, Value};
 use std::env;
 use std::fs;
+use std::fs::OpenOptions;
 use std::io::{self, Write};
 use std::path::PathBuf;
-
-use std::fs::OpenOptions;
 
 const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
 {
@@ -113,7 +113,10 @@ pub fn insert_autovirt_config_data() -> io::Result<()> {
 
     if let Some(autovirt_dir) = get_autovirt_data_dir() {
         let json_file_path = autovirt_dir.join("autovirt.json");
-        println!("\nINFO:: Path to autovirt.json config file -> {:?}", json_file_path);
+        println!(
+            "\nINFO:: Path to autovirt.json config file -> {:?}",
+            json_file_path
+        );
 
         let mut data_file = OpenOptions::new()
             .write(true)
@@ -129,4 +132,39 @@ pub fn insert_autovirt_config_data() -> io::Result<()> {
 
     // let mut file = File::create(get_autovirt_data_dir());
     // println!("Testing init data: {}, {}", v["version"], v["images"]["ubuntu2204"]["link"]);
+}
+
+/// Function to get the path to the autovirt.json file based on the user's $HOME
+/// directory.
+///
+/// This is used in many places to getting the path of the autovirt.json config
+/// file and reading data from it to get things such as the images' link for
+/// downloads etc.
+///
+/// ---
+pub fn get_autovirt_json_path() -> String {
+    let home_dir = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+    let json_file_path = PathBuf::from(home_dir)
+        .join(".autovirt")
+        .join("autovirt.json");
+    json_file_path.to_string_lossy().to_string()
+}
+
+/// Function to get the value of a specified json key from the autovirt config
+/// file such as images.ubuntu2204.link which would return the link of the
+/// ubuntu2204 disro for downloads.
+///
+/// This funciton is used throughout the project to get things from the autovirt
+/// config file so they can be used to get vm info, download more vms, get
+/// metadata of existing vm's etc.
+///
+/// ---
+pub fn get_value_from_autovirt_json(key: &str) -> Option<Value> {
+    let file_path = get_autovirt_json_path();
+    let file_content = fs::read_to_string(file_path).unwrap_or_else(|_| "{}".to_string());
+    let v: Value = serde_json::from_str(&file_content).unwrap_or_else(|_| Value::Null);
+
+    key.split('.')
+        .fold(Some(&v), |acc, part| acc?.get(part))
+        .cloned()
 }
