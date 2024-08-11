@@ -9,7 +9,8 @@ use tokio;
 
 // project imports
 mod info;
-mod scripts;
+mod create;
+mod run;
 mod download;
 mod imds;
 mod filesystem;
@@ -83,6 +84,12 @@ enum VMCommands {
         // /// The path to an already existing image (.img cloud init file)
         // #[arg(short, long, help = "Path to existing cloud init .img file", default_value = "1")]
         // path: String,
+    },
+    /// Runs the specified virtual machine (identified by name)
+    Run  {
+        /// The name of the virtual machine to run
+        #[arg(help = "Name of the VM to run")]
+        name: String,
     },
     /// Downloads a cloud-init compatible image for the specified distro.
     Download {
@@ -189,9 +196,12 @@ async fn main() {
             });
 
             // imds::run_file_server(imds_addr, imds_data_dir).await;
-            scripts::create_new_vm(name, dist, size, user, pass, mem, cpus);
+            create::create_new_vm(name, dist, size, user, pass, mem, cpus);
             // exit everythnig
             std::process::exit(0);
+        }
+        VMCommands::Run { name } => {
+            run::run_vm(name);
         }
         VMCommands::Download { dist } =>  {
             let distro_link = filesystem::get_value_from_autovirt_json(&format!("images.{}.link", dist));
