@@ -66,7 +66,8 @@ build:
 	cd $(SRC_DIR); \
 		printf "Entering Directory\t>\t$$PWD\n" ; \
 		printf "Running CMD\t\t>\t'cargo build'\n\n" ; \
-		cargo build --release;
+		RUSTFLAGS="-Awarnings" cargo build --release;
+		# cargo build --release;
 
 # testing the binary (testing commands)
 

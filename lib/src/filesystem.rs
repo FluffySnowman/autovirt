@@ -73,8 +73,25 @@ pub fn create_autovirt_data_dir() -> io::Result<()> {
 /// Function to add links to the autovirt.json file so available images can be
 /// searched.
 ///
+/// This also adds other things such as the version, other metadata and some
+/// other things which will probably change in the future.
+///
+/// List of things that are added/returned by this to the config file:
+///
+/// - version               `# autovirt version`
+/// - images                `# all the images available for autovirt`
+///   - ubuntu2204: link    `# link to distro download`
+///   - ubuntu2204: link    `# link to distro download`
+/// - other metadata
+///
+/// Some things may change here and alot of other things will be added in the
+/// future.
+///
+/// The json file will also have extra data for the list of created vm's, the
+/// size of vm's and other vm metadata.
+///
 /// ---
-pub fn insert_autovirt_config_data() -> Result<()> {
+pub fn insert_autovirt_config_data(vm_image: &String) -> Result<()> {
     let data = r#"
         {
             "something": "autovirt",
@@ -89,7 +106,9 @@ pub fn insert_autovirt_config_data() -> Result<()> {
     let v: Value = serde_json::from_str(data)?;
 
     // printing shit
-    println!("Autovirt Version: {}\nAutovirt Images {}", v["version"], v["images"]["ubuntu2204"]);
+    // println!("Autovirt Version: {}", v["version"]);
+    // println!("Requested image: {}\nVM image link: {}\n", vm_image, v["images"][vm_image]);
+    // println!("Autovirt Version: {}\nAutovirt Images {}", v["version"], v["images"]["ubuntu2204"]);
 
     Ok(())
 }
