@@ -32,11 +32,16 @@ pub fn run_vm(vm_name: &String) {
                                                           // but that doesn't matter
                                                           // since its just a label
 
+    let vm_image_path_json = filesystem::get_value_from_autovirt_json(&format!("vms.{}.image_path", vm_name))
+        .and_then(|v| v.as_str().map(String::from))
+        .unwrap_or_else(|| "".to_string()); // default 1 cpu if not found
+
     println!("-------- VM Details --------");
     println!("NAME: {}", vm_name);
     println!("DISTRO: {}", vm_distro_json);
     println!("MEMORY: {}MB", vm_memory_mb_json);
     println!("CPUS: {}", vm_cpus_json);
+    println!("PATH: {}", vm_image_path_json);
     println!("-----------------------------");
 
 
@@ -53,13 +58,17 @@ pub fn run_vm(vm_name: &String) {
         .arg(&vm_memory_mb_json)
         .arg("-nographic")
         .arg("-hda")
-        .arg("")
+        .arg(&vm_image_path_json)
         .arg("-smbios")
         .arg("type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/")
         .arg("-serial")
         .arg("pty")
         .arg("-smp")
         .arg(&format!("cpus={}", vm_cpus_json));
+
+    if std::env::var("AUTOVIRT_DEBUG").is_ok() {
+        println!("DEBUG:: run command -> {:?}", run_vm_cmd);
+    }
 
     let status = run_vm_cmd
         .status()
