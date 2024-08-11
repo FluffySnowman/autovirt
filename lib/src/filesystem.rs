@@ -10,6 +10,31 @@ use std::path::PathBuf;
 // use serde_json::{Value, json};
 use serde_json::{Result, Value};
 
+
+const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
+{
+    "something": "autovirt",
+    "version": "0.0.1",
+    "images": {
+        "ubuntu1804": {
+            "link": "https://cloud-images.ubuntu.com/releases/18.04/release/ubuntu-18.04-server-cloudimg-amd64.img",
+            "filename": "ubuntu-18.04-autovirt-server-cloudimg-amd64.img"
+        },
+        "ubuntu2004": {
+            "link": "https://cloud-images.ubuntu.com/releases/20.04/release/ubuntu-20.04-server-cloudimg-amd64.img",
+            "filename": "ubuntu-20.04-autovirt-server-cloudimg-amd64.img"
+        },
+        "ubuntu2204": {
+            "link": "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img",
+            "filename": "ubuntu-22.04-autovirt-server-cloudimg-amd64.img"
+        }
+    },
+    "downloaded_images": {},
+    "vms": {}
+}
+"#;
+
+
 /// Function that gets the data directory for autovirt based on the user's $HOME
 /// environment variable.
 ///
@@ -91,24 +116,11 @@ pub fn create_autovirt_data_dir() -> io::Result<()> {
 /// size of vm's and other vm metadata.
 ///
 /// ---
-pub fn insert_autovirt_config_data(vm_image: &String) -> Result<()> {
-    let data = r#"
-        {
-            "something": "autovirt",
-            "version": 42,
-            "images": {
-                "ubuntu1804": "https://cloud-images.ubuntu.com/releases/18.04/release/ubuntu-18.04-server-cloudimg-amd64.img",
-                "ubuntu2004": "https://cloud-images.ubuntu.com/releases/20.04/release/ubuntu-20.04-server-cloudimg-amd64.img",
-                "ubuntu2204": "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
-            }
-        }"#;
+pub fn insert_autovirt_config_data() -> Result<()> {
 
-    let v: Value = serde_json::from_str(data)?;
+    let v: Value = serde_json::from_str(DEFAULT_AUTOVIRT_CONFIG_DATA)?;
 
-    // printing shit
-    // println!("Autovirt Version: {}", v["version"]);
-    // println!("Requested image: {}\nVM image link: {}\n", vm_image, v["images"][vm_image]);
-    // println!("Autovirt Version: {}\nAutovirt Images {}", v["version"], v["images"]["ubuntu2204"]);
+    println!("Testing init data: {}, {}", v["version"], v["image"]["ubuntu2204"]);
 
     Ok(())
 }

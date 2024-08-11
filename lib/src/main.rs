@@ -109,10 +109,10 @@ async fn main() {
     match &cli_arguments.command {
         VMCommands::Init {  } => {
 
-            let test_img: String = "ubuntu2204".to_string();
+            // let test_img: String = "ubuntu2204".to_string();
 
             // Testing shit
-            let _ = filesystem::insert_autovirt_config_data(&test_img);
+            let _ = filesystem::insert_autovirt_config_data();
 
             // match filesystem::create_autovirt_data_dir() {
             //     Ok(()) => println!("SUCCESS: Autovirt data directory created successfully"),
