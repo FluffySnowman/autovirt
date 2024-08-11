@@ -3,12 +3,10 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;
 
-// use std::collections::HashMap;
-// use std::fs::{self, File, OpenOptions};
-// use std::io::{self, Read, Write};
-// use std::path::PathBuf;
-// use serde_json::{Value, json};
+use std::fs::File;
 use serde_json::{Result, Value};
+
+use std::fs::OpenOptions;
 
 
 const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
@@ -116,12 +114,26 @@ pub fn create_autovirt_data_dir() -> io::Result<()> {
 /// size of vm's and other vm metadata.
 ///
 /// ---
-pub fn insert_autovirt_config_data() -> Result<()> {
+pub fn insert_autovirt_config_data() -> io::Result<()> {
 
-    let v: Value = serde_json::from_str(DEFAULT_AUTOVIRT_CONFIG_DATA)?;
+    // let v: Value = serde_json::from_str(DEFAULT_AUTOVIRT_CONFIG_DATA)?;
 
-    println!("Testing init data: {}, {}", v["version"], v["image"]["ubuntu2204"]);
+
+  if let Some(autovirt_dir) = get_autovirt_data_dir() {
+        let json_file_path = autovirt_dir.join("autovirt.json");
+        println!("{:?}", json_file_path);
+
+        let mut data_file = OpenOptions::new().write(true).truncate(true).open(json_file_path)?;
+
+        data_file.write_all(DEFAULT_AUTOVIRT_CONFIG_DATA.as_bytes())?;
+    } else {
+        eprintln!("ERROR: something went wrong with insert_autovirt_config_data");
+    }
 
     Ok(())
+
+    // let mut file = File::create(get_autovirt_data_dir());
+    // println!("Testing init data: {}, {}", v["version"], v["images"]["ubuntu2204"]["link"]);
+
 }
 

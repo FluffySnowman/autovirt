@@ -112,12 +112,16 @@ async fn main() {
             // let test_img: String = "ubuntu2204".to_string();
 
             // Testing shit
-            let _ = filesystem::insert_autovirt_config_data();
+            // let _ = filesystem::insert_autovirt_config_data();
 
-            // match filesystem::create_autovirt_data_dir() {
-            //     Ok(()) => println!("SUCCESS: Autovirt data directory created successfully"),
-            //     Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
-            // }
+            match filesystem::create_autovirt_data_dir() {
+                Ok(()) => {
+                    println!("SUCCESS: Autovirt data directory created successfully");
+                    println!("INFO: Inserting autovirt config data to config file in data directory...");
+                    let _ = filesystem::insert_autovirt_config_data();
+                },
+                Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
+            }
         },
         VMCommands::Info { name } => {
             info::get_vm_info(name);
