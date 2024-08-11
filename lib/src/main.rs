@@ -157,8 +157,6 @@ async fn main() {
             info::get_vm_info(name);
         }
         VMCommands::List { item } => {
-            // in fo::show_all_vms();
-            // download::available_images();
             println!("listing available images");
             _ = item;
         }

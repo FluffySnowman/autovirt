@@ -71,6 +71,10 @@ pub fn download_vm_image(distro: &String) -> Result<(), Box<dyn Error>> {
     // Initialize HTTP client and make the request
     let client = Client::new();
     println!("Downloading image for {} from {}...", distro, distro_link);
+    println!("Downloading to -> {}", file_path.to_string_lossy());
+    println!("INFO: This could take a while depending on your internet connection");
+    println!("HINT: Add an & at the end of the command to run it in the background");
+    println!("INFO: Downloading...");
     let mut response = client.get(&distro_link).send()?;
 
     if response.status().is_success() {

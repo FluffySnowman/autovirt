@@ -4,6 +4,8 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::{self, Write};
 use std::path::PathBuf;
+use serde_json::json;
+
 
 const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
 {
@@ -21,6 +23,10 @@ const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
         "ubuntu2204": {
             "link": "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img",
             "filename": "ubuntu-22.04-autovirt-server-cloudimg-amd64.img"
+        },
+        "ubuntu2404": {
+            "link": "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img",
+            "filename": "ubuntu-24.04-autovirt-server-cloudimg-amd64.img"
         }
     },
     "downloaded_images": {},
@@ -168,3 +174,30 @@ pub fn get_value_from_autovirt_json(key: &str) -> Option<Value> {
         .fold(Some(&v), |acc, part| acc?.get(part))
         .cloned()
 }
+
+
+pub fn insert_value_into_autovirt_json(key: &str, value: &str) {
+    let file_path = get_autovirt_json_path();
+
+    // Read the existing JSON content
+    let file_content = fs::read_to_string(&file_path).unwrap_or_else(|_| "{}".to_string());
+    let mut v: Value = serde_json::from_str(&file_content).unwrap_or_else(|_| json!({}));
+
+    // Split the key by '.' to navigate nested JSON objects
+    let keys: Vec<&str> = key.split('.').collect();
+    let mut current = &mut v;
+
+    for k in keys.iter().take(keys.len() - 1) {
+        if !current[k].is_object() {
+            current[k] = json!({});
+        }
+        current = current.get_mut(k).unwrap();
+    }
+
+    // Insert or update the value
+    current[keys[keys.len() - 1]] = Value::String(value.to_string());
+
+    // Write the modified JSON back to the file
+    fs::write(&file_path, serde_json::to_string_pretty(&v).unwrap()).expect("Failed to write to file");
+}
+
