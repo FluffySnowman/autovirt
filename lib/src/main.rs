@@ -131,13 +131,27 @@ async fn main() {
 
         }
         VMCommands::Init {  } => {
+            println!("WARNING:: ONLY RUN THIS COMMAND ONCE.");
+            println!("WARNING:: IF YOU HAVE ALREADY RUN THIS COMMAND THEN IT WILL");
+            println!("WARNING:: OVERWRITE THE EXISTING CONFIG FILE autovirt.json.\n");
+            println!("WARNING:: The autovirt.json file contains important data for autovirt to work");
+            println!("WARNING:: such as all the metadata for the installed VM's, the available images");
+            println!("WARNING:: and other important data.\n");
+            println!("Proceed with initialisation? [yes/No] ");
+            let mut proceed_prompt = String::new();
+            if { std::io::stdin().read_line(&mut proceed_prompt).unwrap(); proceed_prompt.trim().eq_ignore_ascii_case("yes") } {
+                println!("INFO:: Initialising autovirt...");
+                println!("INFO:: Creating config file for autovirt...");
+                match filesystem::insert_autovirt_config_data() {
+                    Ok(()) => {
+                        println!("SUCCESS: Autovirt config file created successfully");
+                    },
+                    Err(e) => eprintln!("ERROR: Failed to create autovirt config file -> {}", e),
+                }
 
-            // let test_img: String = "ubuntu2204".to_string();
-
-            // Testing shit
-            // let _ = filesystem::insert_autovirt_config_data();
-
-            println!("INFO:: INitialising autovirt config data");
+            } else {
+               println!("ABORTED AUTOVIRT INITIALISATION");
+            }
         },
         VMCommands::Info { name } => {
             info::get_vm_info(name);

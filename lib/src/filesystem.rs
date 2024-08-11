@@ -24,7 +24,6 @@ const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
         }
     },
     "downloaded_images": {},
-    notshit
     "vms": {}
 }
 "#;
@@ -114,7 +113,7 @@ pub fn insert_autovirt_config_data() -> io::Result<()> {
 
     if let Some(autovirt_dir) = get_autovirt_data_dir() {
         let json_file_path = autovirt_dir.join("autovirt.json");
-        println!("{:?}", json_file_path);
+        println!("\nINFO:: Path to autovirt.json config file -> {:?}", json_file_path);
 
         let mut data_file = OpenOptions::new()
             .write(true)
