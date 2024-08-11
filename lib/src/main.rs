@@ -12,7 +12,7 @@ mod info;
 mod scripts;
 mod download;
 mod imds;
-mod fs;
+mod filesystem;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -108,7 +108,7 @@ async fn main() {
 
     match &cli_arguments.command {
         VMCommands::Init {  } => {
-            match fs::create_autovirt_data_dir() {
+            match filesystem::create_autovirt_data_dir() {
                 Ok(()) => println!("SUCCESS: Autovirt data directory created successfully"),
                 Err(e) => eprintln!("ERROR: Failed to create autovirt data directory -> {}", e),
             }

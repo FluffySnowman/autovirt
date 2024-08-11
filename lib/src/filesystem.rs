@@ -3,6 +3,12 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;
 
+// use std::collections::HashMap;
+// use std::fs::{self, File};
+// use std::io::{self, Read, Write};
+// use std::path::PathBuf;
+// use serde_json::{Value, json};
+
 /// Function that gets the data directory for autovirt based on the user's $HOME
 /// environment variable.
 ///
@@ -61,3 +67,39 @@ pub fn create_autovirt_data_dir() -> io::Result<()> {
         ))
     }
 }
+
+
+// Function to add links to the autovirt.json file so available images can be
+// searched.
+//
+// ---
+// pub fn add_vm_links_to_autovirt_json() -> io::Result<()> {
+//     let home_dir = env::var("HOME").map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Could not find $HOME directory"))?;
+//     let json_file_path = PathBuf::from(home_dir).join(".autovirt/autovirt.json");
+
+//     let mut file = File::open(&json_file_path)?;
+//     let mut contents = String::new();
+//     file.read_to_string(&mut contents)?;
+
+//     let mut json_data: Value = serde_json::from_str(&contents)?;
+
+//     let mut images = json_data["images"].as_object_mut().unwrap_or(&mut json!({}).as_object_mut().unwrap());
+
+//     // List of VMs and their links
+//     let vm_links = HashMap::from([
+//         ("ubuntu1804", "https://cloud-images.ubuntu.com/releases/18.04/release/ubuntu-18.04-server-cloudimg-amd64.img"),
+//         ("ubuntu2004", "https://cloud-images.ubuntu.com/releases/20.04/release/ubuntu-20.04-server-cloudimg-amd64.img"),
+//         ("ubuntu2204", "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"),
+//     ]);
+
+//     for (vm, link) in vm_links {
+//         images.insert(vm.to_string(), json!(link));
+//     }
+
+//     // Write the updated JSON back to the file
+//     let mut file = File::create(&json_file_path)?;
+//     file.write_all(serde_json::to_string_pretty(&json_data)?.as_bytes())?;
+
+//     Ok(())
+// }
+
