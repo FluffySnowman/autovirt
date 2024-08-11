@@ -26,10 +26,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum VMCommands {
-    /// Populates config files with data required for autovirt to work.
-    Init { },
     /// Creates config files and data directory(s) for autovirt.
     Install { },
+    /// Populates config files with data required for autovirt to work.
+    Init { },
     /// Gets info & details about VMs and networks (qemu).
     Info {
         #[arg(
@@ -192,6 +192,9 @@ async fn main() {
                 Some(link) => println!("Fetched download link for {}: -> {}", dist, link.as_str().unwrap_or("Invalid link")),
                 None => println!("ERROR: Could not find a download link for istro -> {}", dist),
             }
+
+            let _ = download::download_vm_image(dist);
+
             // let _ = download::download_vm_image(&dist.to_string());
         }
     }

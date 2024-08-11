@@ -1,8 +1,15 @@
 use reqwest::blocking::Client;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt::format;
 use std::fs::File;
 use std::io::copy;
+
+use std::fs::{self};
+use std::io::{self};
+use std::path::PathBuf;
+
+use crate::filesystem;
 
 /// DATA DIRECTORY IS NOW IN THE FS.RS FILE AND IS AT ~/.autovirt
 // pub const AUTOVIRT_DATA_DIR: &str = "lib/_data/";
@@ -38,69 +45,116 @@ pub fn init_available_images() {
 /// all available images and will/or will default to the ubuntu 22.04 image.
 ///
 pub fn download_vm_image(distro: &String) -> Result<(), Box<dyn Error>> {
-    init_available_images();
-
-    let url;
-
-    // Safely access the global hashmap
-    unsafe {
-        if let Some(images) = &AVAILABLE_IMAGES {
-            if let Some(link) = images.get(distro.as_str()) {
-                println!("DOWNLOAD LINK FOR {}: {}", distro, link);
-                url = link;
-            } else {
-                eprintln!("NO LINK FOR DISTRO FOUND: {}", distro);
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "No downlead link found for the specified distro",
-                )));
-            }
-        } else {
-            eprintln!("AVAILABLE_IMAGES not initialised");
-            return Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "AVAILABLE_IMAGES not initialised",
-            )));
-        }
-    }
-
-    // getting the user's home diretory
-
-    let file_path = format!("{}-autovirt.img", distro);
-
-    let client = Client::new();
-
-    println!("Downloading image for {}...", distro);
-    let mut response = match client.get(url.clone()).send() {
-        Ok(resp) => resp,
-        Err(e) => {
-            eprintln!("ERROR: failed to send request -> {}", e);
-            return Err(Box::new(e));
+    // Get the download link from the JSON config file
+    let distro_link = match filesystem::get_value_from_autovirt_json(&format!("images.{}.link", distro)) {
+        Some(link) => link.as_str().unwrap_or("").to_string(),
+        None => {
+            eprintln!("ERROR: Could not find a download link for distro -> {}", distro);
+            return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, "Distro link not found")));
         }
     };
 
-    if response.status().is_success() {
-        let mut file = match File::create(&file_path) {
-            Ok(f) => f,
-            Err(e) => {
-                eprintln!("ERROR: failed to create file -> {}", e);
-                return Err(Box::new(e));
-            }
-        };
-
-        if let Err(e) = copy(&mut response, &mut file) {
-            eprintln!("ERROR: failed to copy data to file -> {}", e);
-            return Err(Box::new(e));
+    // Get the filename for the distro
+    let distro_filename = match filesystem::get_value_from_autovirt_json(&format!("images.{}.filename", distro)) {
+        Some(filename) => filename.as_str().unwrap_or("").to_string(),
+        None => {
+            eprintln!("ERROR: Could not find a filename for distro -> {}", distro);
+            return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, "Distro filename not found")));
         }
+    };
 
-        println!("Downloaded vm file/image to -> {}", file_path);
+    // Construct the full file path
+    let data_dir = filesystem::get_autovirt_data_dir().unwrap().join("_data/downloads/");
+    fs::create_dir_all(&data_dir)?; // Ensure the download directory exists
+    let file_path = data_dir.join(distro_filename);
+
+    // Initialize HTTP client and make the request
+    let client = Client::new();
+    println!("Downloading image for {} from {}...", distro, distro_link);
+    let mut response = client.get(&distro_link).send()?;
+
+    if response.status().is_success() {
+        let mut file = File::create(&file_path)?;
+        copy(&mut response, &mut file)?;
+        println!("Downloaded VM image to -> {}", file_path.to_string_lossy());
     } else {
-        eprintln!("ERROR: failed to download -> {}", response.status());
-        return Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("ERROR: some HTTP error -> {}", response.status()),
+        eprintln!("ERROR: Failed to download -> {}", response.status());
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::Other,
+            format!("HTTP error -> {}", response.status()),
         )));
     }
 
     Ok(())
 }
+
+
+
+
+// pub fn download_vm_image(distro: &String) -> Result<(), Box<dyn Error>> {
+//     init_available_images();
+
+//     let url;
+
+//     // Safely access the global hashmap
+//     unsafe {
+//         if let Some(images) = &AVAILABLE_IMAGES {
+//             if let Some(link) = images.get(distro.as_str()) {
+//                 println!("DOWNLOAD LINK FOR {}: {}", distro, link);
+//                 url = link;
+//             } else {
+//                 eprintln!("NO LINK FOR DISTRO FOUND: {}", distro);
+//                 return Err(Box::new(std::io::Error::new(
+//                     std::io::ErrorKind::NotFound,
+//                     "No downlead link found for the specified distro",
+//                 )));
+//             }
+//         } else {
+//             eprintln!("AVAILABLE_IMAGES not initialised");
+//             return Err(Box::new(std::io::Error::new(
+//                 std::io::ErrorKind::Other,
+//                 "AVAILABLE_IMAGES not initialised",
+//             )));
+//         }
+//     }
+
+//     // getting the user's home diretory
+
+//     let file_path = format!("{}-autovirt.img", distro);
+
+//     let client = Client::new();
+
+//     println!("Downloading image for {}...", distro);
+//     let mut response = match client.get(url.clone()).send() {
+//         Ok(resp) => resp,
+//         Err(e) => {
+//             eprintln!("ERROR: failed to send request -> {}", e);
+//             return Err(Box::new(e));
+//         }
+//     };
+
+//     if response.status().is_success() {
+//         let mut file = match File::create(&file_path) {
+//             Ok(f) => f,
+//             Err(e) => {
+//                 eprintln!("ERROR: failed to create file -> {}", e);
+//                 return Err(Box::new(e));
+//             }
+//         };
+
+//         if let Err(e) = copy(&mut response, &mut file) {
+//             eprintln!("ERROR: failed to copy data to file -> {}", e);
+//             return Err(Box::new(e));
+//         }
+
+//         println!("Downloaded vm file/image to -> {}", file_path);
+//     } else {
+//         eprintln!("ERROR: failed to download -> {}", response.status());
+//         return Err(Box::new(std::io::Error::new(
+//             std::io::ErrorKind::Other,
+//             format!("ERROR: some HTTP error -> {}", response.status()),
+//         )));
+//     }
+
+//     Ok(())
+// }
