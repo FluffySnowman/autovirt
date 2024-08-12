@@ -32,7 +32,7 @@ enum VMCommands {
     Install { },
     /// Populates config files with data required for autovirt to work.
     Init { },
-    /// Gets info & details about VMs and networks (qemu).
+    /// Gets info & details about VMs by name.
     Info {
         #[arg(
             help = "The name of the VM to show details about",
@@ -176,7 +176,7 @@ async fn main() {
             }
         },
         VMCommands::Info { name } => {
-            info::get_vm_info(name);
+            info::get_vm_info_by_name(name);
         }
         VMCommands::List { item } => {
             println!("listing available images");
