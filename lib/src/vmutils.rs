@@ -10,6 +10,7 @@
 use std::process::Command;
 use std::fs;
 use std::path::PathBuf;
+use serde_json::Value;
 
 use crate::filesystem;
 
@@ -26,6 +27,61 @@ pub fn get_image_checksum(file: &String) {
 
     let output = cmd.output().expect("Failed to execute checksum command");
     println!("Checksum {}", String::from_utf8_lossy(&output.stdout));
+}
+
+
+/// Function that gets information of a virtual machine by name.
+///
+/// This simply gets the information of the virtual machine from the
+/// `autovirt.json` config file and prints out the plain json.
+///
+/// ---
+pub fn get_vm_info_by_name(vm_name: &String) {
+    // let vm_details_raw_json =  filesystem::get_value_from_autovirt_json(&format!("vms.{}", vm_name));
+    // println!("Details for vm -> {}\n{}", vm_name, vm_details_raw_json.unwrap_or_default());
+    let vm_info_cpus =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.cpus", vm_name));
+    let vm_info_distro =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.distro", vm_name));
+    let vm_info_image_path =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.image_path", vm_name));
+    let vm_info_memory_mb =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.memory_mb", vm_name));
+    let vm_info_name =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.name", vm_name));
+    let vm_info_size =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.size", vm_name));
+    let vm_info_user =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.user", vm_name));
+    let vm_info_password =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.password", vm_name));
+
+    println!("Name: {}", vm_info_name.unwrap_or_default());
+    println!("CPUs: {}", vm_info_cpus.unwrap_or_default());
+    println!("Distro: {}", vm_info_distro.unwrap_or_default());
+    println!("Image Path: {}", vm_info_image_path.unwrap_or_default());
+    println!("Memory MB: {}", vm_info_memory_mb.unwrap_or_default());
+    println!("Size: {}", vm_info_size.unwrap_or_default());
+    println!("User: {}", vm_info_user.unwrap_or_default());
+    println!("Password: {}", vm_info_password.unwrap_or_default());
+}
+
+
+/// Function to list all the currently installed vms
+///
+/// ---
+pub fn list_vms() {
+    // Load the autovirt.json configuration
+    let autovirt_json_path = filesystem::get_autovirt_json_path();
+    let autovirt_config = fs::read_to_string(&autovirt_json_path)
+        .and_then(|content| serde_json::from_str::<Value>(&content).map_err(Into::into))
+        .expect("ERROR: Failed to read autovirt.json");
+
+    // Check if "vms" exists in the configuration
+    if let Some(vms) = autovirt_config.get("vms").and_then(|v| v.as_object()) {
+        for (vm_name, vm_data) in vms {
+            let distro = vm_data.get("distro").and_then(Value::as_str).unwrap_or("Unknown distro");
+            let size = vm_data.get("size").and_then(Value::as_str).unwrap_or("Unknown distro");
+            // println!("- Name{}, Distro: {}", vm_name, distro);
+            println!("│ {}", vm_name);
+            println!("├──  {}", distro);
+            println!("├──  {}G", size);
+        }
+    } else {
+        println!("No VMs found.");
+    }
 }
 
 

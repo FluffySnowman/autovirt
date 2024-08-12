@@ -40,11 +40,8 @@ enum VMCommands {
         )]
         name: String,
     },
-    /// Lists general VM-related items.
-    List {
-        #[arg(help = "The item to list")]
-        item: String,
-    },
+    /// Lists all currently installed VMs with some metadata.
+    List { },
     /// Create a new VM based on a given distro, user/pass and name
     /// (cloud-init/qemu)
     Create {
@@ -176,11 +173,11 @@ async fn main() {
             }
         },
         VMCommands::Info { name } => {
-            info::get_vm_info_by_name(name);
+            vmutils::get_vm_info_by_name(name);
         }
-        VMCommands::List { item } => {
-            println!("listing available images");
-            _ = item;
+        VMCommands::List { } => {
+            println!("\n------ All Installed VMs ------\n");
+            vmutils::list_vms();
         }
         VMCommands::Create {
             name,
