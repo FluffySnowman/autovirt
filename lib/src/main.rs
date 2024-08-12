@@ -99,6 +99,12 @@ enum VMCommands {
         )]
         dist: String,
     },
+    /// Deletes specified VM (by name) along with associated files & relevant
+    /// configs.
+    Delete {
+        #[arg(help = "Name of the VM to delete")]
+        name: String,
+    },
     /// Gets the checksum of a specified file/image.
     Checksum {
         /// The file to get the checksum of
@@ -214,6 +220,11 @@ async fn main() {
 
             // let _ = download::download_vm_image(&dist.to_string());
         }
+        VMCommands::Delete { name } => {
+            println!("Deleting VM (name): {}", name);
+            vmutils::delete_vm(name);
+            print!("VM Deleted (or not idk bruh)");
+        },
         VMCommands::Checksum { file } => {
             vmutils::get_image_checksum(file);
         }
