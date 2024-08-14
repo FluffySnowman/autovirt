@@ -107,7 +107,7 @@ pub fn create_new_vm(
         .replace("AUTOVIRT_SSH_KEY", &ssh_key_content);
 
     let autovirt_data_dir = filesystem::get_autovirt_data_dir();
-    let autovirt_data_dir_cloud_init_user_data_file = autovirt_data_dir.unwrap().join("conf/user-data");
+    let autovirt_data_dir_cloud_init_user_data_file = autovirt_data_dir.unwrap().join("_data/conf/user-data");
 
     println!("\x1b[0;32mLOG:: Writing to user-data (cloud-init) file...\x1b[0m");
     std::fs::write(autovirt_data_dir_cloud_init_user_data_file, final_user_data)
