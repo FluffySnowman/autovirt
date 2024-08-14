@@ -69,15 +69,18 @@ pub fn list_vms() {
         .and_then(|content| serde_json::from_str::<Value>(&content).map_err(Into::into))
         .expect("ERROR: Failed to read autovirt.json");
 
+    println!(".");
     // Check if "vms" exists in the configuration
     if let Some(vms) = autovirt_config.get("vms").and_then(|v| v.as_object()) {
         for (vm_name, vm_data) in vms {
             let distro = vm_data.get("distro").and_then(Value::as_str).unwrap_or("Unknown distro");
             let size = vm_data.get("size").and_then(Value::as_str).unwrap_or("Unknown distro");
+            let memory_mb = vm_data.get("memory_mb").and_then(Value::as_str).unwrap_or("Unknown distro");
             // println!("- Name{}, Distro: {}", vm_name, distro);
-            println!("│ {}", vm_name);
-            println!("├──  {}", distro);
-            println!("├──  {}G", size);
+            println!("│> {}", vm_name);
+            println!("├──  DIST: {}", distro);
+            println!("├──  SIZE: {}G", size);
+            println!("├──  MEM:  {}mb", memory_mb);
         }
     } else {
         println!("No VMs found.");
