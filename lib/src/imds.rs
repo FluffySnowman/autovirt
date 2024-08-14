@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use crate::filesystem;
+
 /// Function to start the IDMS server (Instance Metadata Service) for the
 /// metadata for a VM.
 ///
@@ -17,10 +19,14 @@ pub fn start_idms_server() {
         let path = request.uri().path().trim_start_matches('/');
         let path = if path.is_empty() { "index.html" } else { path };
 
-        // Hardcoding this shit in since there's a million diffenent types for a
-        // string in this shitty language.
-        //
-        let file_path = Path::new("./lib/src/conf/").join(path);
+        // Getting the path of the autovirt data directory where the cloud init
+        // config files are stored and then serving them
+
+        let autovirt_data_dir = filesystem::get_autovirt_data_dir();
+        let autovirt_cloud_init_dir = autovirt_data_dir.unwrap().join("_data/conf");
+
+        let file_path = Path::new(&autovirt_cloud_init_dir).join(path);
+        println!("Starting imds server with path -> {:?}", file_path);
 
         if file_path.is_file() {
             let mut file = File::open(&file_path).expect("file. not found rip");

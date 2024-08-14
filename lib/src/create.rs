@@ -4,6 +4,7 @@ use std::thread;
 use std::time;
 
 use crate::filesystem;
+use crate::initdata;
 
 /// The VM sizes (vcpus, ram, disk etc.)
 #[derive(Debug)]
@@ -13,26 +14,6 @@ pub struct _VMSizes {
     disk_gb: u32,
 }
 
-/// The user-data cloud init config file (uses interpolation/regex something
-/// else) to add the user specified details- like password, username, ssh key
-/// etc.
-///
-pub const USER_DATA: &str = r#"
-#cloud-config
-users:
-  - name: AUTOVIRT_USER
-    plain_text_passwd: AUTOVIRT_PASS
-    lock_passwd: false
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: sudo
-    shell: /bin/bash
-    ssh_import_id: None
-    ssh_authorized_keys:
-      - ssh-rsa eeeeeeeeeeee
-
-chpasswd:
-  expire: false
-"#;
 
 /// Creates a new virtual machine based on the given parameters.
 /// This takes the vm name, distro, size, username, password etc. and may even
@@ -58,6 +39,7 @@ pub fn create_new_vm(
     vm_pass: &String,
     vm_memory_mb: &String,
     vm_cpus: &String,
+    vm_ssh_key: &String,
 ) {
     // Print debug info if the user has set the AUTOVIRT_DEBUG env var to 1
     if std::env::var("AUTOVIRT_DEBUG").is_ok() {
@@ -73,6 +55,7 @@ pub fn create_new_vm(
     println!("\x1b[0;32mPASSWORD: \x1b[0m{}", vm_pass);
     println!("\x1b[0;32mMEMORY: \x1b[0m{}", vm_memory_mb);
     println!("\x1b[0;32mVCPUS: \x1b[0m{}", vm_cpus);
+    println!("\x1b[0;32mSSH KEY: \x1b[0m{}", vm_ssh_key);
     println!("\x1b[0;32m-----------------------\x1b[0m");
 
     // Fetch the filename for the specified distro
@@ -114,14 +97,20 @@ pub fn create_new_vm(
     thread::sleep(Duration::from_secs(3));
     println!("\x1b[0;32mLOG:: Creating VM...\x1b[0m");
 
+    // Reading the contents of the ssh key file specified by the user
+    let ssh_key_content = fs::read_to_string(vm_ssh_key).expect("ERROR: failed to read ssh key file contents");
+
     // Doing string replaces for the user-data for the cloud init config file.
-    let final_user_data = USER_DATA
+    let final_user_data = initdata::CLOUD_INIT_USER_DATA
         .replace("AUTOVIRT_USER", vm_user)
         .replace("AUTOVIRT_PASS", vm_pass)
-        .replace("eeeeeeeeeeee", "your mom");
+        .replace("AUTOVIRT_SSH_KEY", &ssh_key_content);
+
+    let autovirt_data_dir = filesystem::get_autovirt_data_dir();
+    let autovirt_data_dir_cloud_init_user_data_file = autovirt_data_dir.unwrap().join("conf/user-data");
 
     println!("\x1b[0;32mLOG:: Writing to user-data (cloud-init) file...\x1b[0m");
-    std::fs::write("./lib/src/conf/user-data", final_user_data)
+    std::fs::write(autovirt_data_dir_cloud_init_user_data_file, final_user_data)
         .expect("ERROR: Failed to write user-data file");
     println!("\x1b[0;32mLOG:: User-data file written successfully\x1b[0m");
 

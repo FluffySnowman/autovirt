@@ -17,6 +17,7 @@ mod download;
 mod imds;
 mod filesystem;
 mod vmutils;
+mod initdata;
 
 #[derive(Parser)]
 #[command(name = "AutoVirt", about = "AutoVirt VM Automation CLI", long_about = None)]
@@ -83,6 +84,10 @@ enum VMCommands {
         /// The number of vCPU' s for the VM
         #[arg(short, long, help = "The amount of vCPU's for the vm", default_value = "1")]
         cpus: String,
+
+        /// The path to an ssh key to add to the user
+        #[arg(short, long, help = "Path to an ssh key to add to the user", default_value = "none")]
+        key: String,
 
         // /// The path to an already existing image (.img cloud init file)
         // #[arg(short, long, help = "Path to existing cloud init .img file", default_value = "1")]
@@ -193,6 +198,7 @@ async fn main() {
             pass,
             mem,
             cpus,
+            key,
         } => {
             // File server is currently run with hardcoded values since the
             // compiler keeps yapping.
@@ -205,7 +211,7 @@ async fn main() {
             });
 
             // imds::run_file_server(imds_addr, imds_data_dir).await;
-            create::create_new_vm(name, dist, size, user, pass, mem, cpus);
+            create::create_new_vm(name, dist, size, user, pass, mem, cpus, key);
             // exit everythnig
             std::process::exit(0);
         }

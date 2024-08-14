@@ -6,6 +6,8 @@ use std::io::{self, Write};
 use std::path::PathBuf;
 use serde_json::json;
 
+use crate::initdata;
+
 
 const DEFAULT_AUTOVIRT_CONFIG_DATA: &str = r#"
 {
@@ -113,9 +115,18 @@ pub fn create_autovirt_data_dir() -> io::Result<()> {
 /// The json file will also have extra data for the list of created vm's, the
 /// size of vm's and other vm metadata.
 ///
+/// UPDATE: This function is also now used to add the cloud init config data
+/// (sucha seth user-data, vendor-data & meta-data files) to the data directory
+/// so that the imds server can use that to do things.
+///
 /// ---
 pub fn insert_autovirt_config_data() -> io::Result<()> {
     // let v: Value = serde_json::from_str(DEFAULT_AUTOVIRT_CONFIG_DATA)?;
+
+    let cloud_init_user_daa = initdata::CLOUD_INIT_USER_DATA;
+    let cloud_init_meta_data = initdata::CLOUD_INIT_META_DATA;
+    let cloud_init_vendor_data = initdata::CLOUD_INIT_VENDOR_DATA;
+
 
     if let Some(autovirt_dir) = get_autovirt_data_dir() {
         let json_file_path = autovirt_dir.join("autovirt.json");
@@ -130,6 +141,22 @@ pub fn insert_autovirt_config_data() -> io::Result<()> {
             .open(json_file_path)?;
 
         data_file.write_all(DEFAULT_AUTOVIRT_CONFIG_DATA.as_bytes())?;
+
+        // now adding the data of the cloud init config files to the data
+        // directory
+        let data_dir = autovirt_dir.join("_data/conf");
+        if !data_dir.exists() {
+            fs::create_dir_all(&data_dir)?;
+        }
+
+        // writing the cloud init config files to the data directory
+        let _file = fs::File::create(data_dir.join("user-data"))?;
+        std::fs::write(data_dir.join("user-data"), cloud_init_user_daa)?;
+        let _file = fs::File::create(data_dir.join("meta-data"))?;
+        std::fs::write(data_dir.join("meta-data"), cloud_init_meta_data)?;
+        let _file = fs::File::create(data_dir.join("vendor-data"))?;
+        std::fs::write(data_dir.join("vendor-data"), cloud_init_vendor_data)?;
+
     } else {
         eprintln!("ERROR: something went wrong with insert_autovirt_config_data");
     }
