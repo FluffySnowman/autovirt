@@ -1,5 +1,7 @@
 // Rust imports
 
+use std::option;
+
 use clap::Parser;
 use clap::Subcommand;
 use tokio;
@@ -39,6 +41,10 @@ enum VMCommands {
             default_value = "none"
         )]
         name: String,
+
+        #[arg(short, long, help = "Print raw json")]
+        raw: bool,
+
     },
     /// Lists all currently installed VMs with some metadata.
     List { },
@@ -172,8 +178,8 @@ async fn main() {
                println!("ABORTED AUTOVIRT INITIALISATION");
             }
         },
-        VMCommands::Info { name } => {
-            vmutils::get_vm_info_by_name(name);
+        VMCommands::Info { name, raw } => {
+            vmutils::get_vm_info_by_name(name, *raw);
         }
         VMCommands::List { } => {
             println!("\n------ All Installed VMs ------\n");

@@ -37,7 +37,14 @@ pub fn get_image_checksum(file: &String) {
 /// `autovirt.json` config file and prints out the plain json.
 ///
 /// ---
-pub fn get_vm_info_by_name(vm_name: &String) {
+pub fn get_vm_info_by_name(vm_name: &String, raw_output: bool) {
+
+    if raw_output {
+        let vm_details_raw_json =  filesystem::get_value_from_autovirt_json(&format!("vms.{}", vm_name));
+        println!("{}", vm_details_raw_json.unwrap_or_default());
+        return;
+    } else {
+
     // let vm_details_raw_json =  filesystem::get_value_from_autovirt_json(&format!("vms.{}", vm_name));
     // println!("Details for vm -> {}\n{}", vm_name, vm_details_raw_json.unwrap_or_default());
     let vm_info_cpus =  filesystem::get_value_from_autovirt_json(&format!("vms.{}.cpus", vm_name));
@@ -57,6 +64,7 @@ pub fn get_vm_info_by_name(vm_name: &String) {
     println!("Size: {}", vm_info_size.unwrap_or_default());
     println!("User: {}", vm_info_user.unwrap_or_default());
     println!("Password: {}", vm_info_password.unwrap_or_default());
+    }
 }
 
 
