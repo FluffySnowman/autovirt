@@ -36,6 +36,10 @@ pub fn get_image_checksum(file: &String) {
 /// This simply gets the information of the virtual machine from the
 /// `autovirt.json` config file and prints out the plain json.
 ///
+/// If the `raw_output` flag is set to true, it will print out the raw json
+/// which can be used with jq or for something else to work with the data
+/// programmatically.
+///
 /// ---
 pub fn get_vm_info_by_name(vm_name: &String, raw_output: bool) {
 
