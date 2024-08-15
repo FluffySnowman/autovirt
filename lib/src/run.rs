@@ -8,7 +8,7 @@ use std::process::Command;
 use std::thread;
 use std::time;
 
-pub fn run_vm(vm_name: &String) {
+pub fn run_vm(vm_name: &String, vm_port_fwd: &String) {
     println!("LOG:: Executing VM startup process in 3 seconds...");
     let startup_wait = time::Duration::from_secs(3);
     thread::sleep(startup_wait);
@@ -45,13 +45,19 @@ pub fn run_vm(vm_name: &String) {
     println!("-----------------------------");
 
 
+    // vm args for networking (port forwarding string/args given by the user)
+    let vm_network_args = format!("user,{}", vm_port_fwd);
+
+    _ = vm_network_args;
     // Building cmd to run the VM
     let mut run_vm_cmd = Command::new("qemu-system-x86_64");
     run_vm_cmd
         .arg("-net")
         .arg("nic")
         .arg("-net")
-        .arg("user,hostfwd=tcp::2222-:22") // forwarding SSH to 2222 on host
+        .arg(&vm_network_args) // full raw port fwd str args from the user
+        // .arg("user,")
+        // .arg("user,hostfwd=tcp::2244-:22") // forwarding SSH to 2222 on host
         .arg("-machine")
         .arg("accel=kvm:tcg")
         .arg("-m")

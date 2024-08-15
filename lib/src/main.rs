@@ -89,6 +89,10 @@ enum VMCommands {
         #[arg(short, long, help = "Path to an ssh key to add to the user", default_value = "none")]
         key: String,
 
+        /// String for port forwarding arguments
+        #[arg(short, long, help = "Port forward args (i.e. -> 'hostfwd=tcp::2244-:22' )", default_value = "")]
+        ports: String,
+
         // /// The path to an already existing image (.img cloud init file)
         // #[arg(short, long, help = "Path to existing cloud init .img file", default_value = "1")]
         // path: String,
@@ -98,6 +102,10 @@ enum VMCommands {
         /// The name of the virtual machine to run
         #[arg(help = "Name of the VM to run")]
         name: String,
+
+        /// String for port forwarding arguments
+        #[arg(short, long, help = "Port forward args (i.e. -> 'hostfwd=tcp::2244-:22' )", default_value = "")]
+        ports: String,
     },
     /// Downloads a cloud-init compatible image for the specified distro.
     Download {
@@ -199,6 +207,7 @@ async fn main() {
             mem,
             cpus,
             key,
+            ports,
         } => {
             // File server is currently run with hardcoded values since the
             // compiler keeps yapping.
@@ -211,12 +220,12 @@ async fn main() {
             });
 
             // imds::run_file_server(imds_addr, imds_data_dir).await;
-            create::create_new_vm(name, dist, size, user, pass, mem, cpus, key);
+            create::create_new_vm(name, dist, size, user, pass, mem, cpus, key, ports);
             // exit everythnig
             std::process::exit(0);
         }
-        VMCommands::Run { name } => {
-            run::run_vm(name);
+        VMCommands::Run { name, ports } => {
+            run::run_vm(name, ports);
         }
         VMCommands::Download { dist } =>  {
             let distro_link = filesystem::get_value_from_autovirt_json(&format!("images.{}.link", dist));

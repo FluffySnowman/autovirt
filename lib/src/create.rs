@@ -40,6 +40,7 @@ pub fn create_new_vm(
     vm_memory_mb: &String,
     vm_cpus: &String,
     vm_ssh_key: &String,
+    vm_port_fwd: &String,
 ) {
     // Print debug info if the user has set the AUTOVIRT_DEBUG env var to 1
     if std::env::var("AUTOVIRT_DEBUG").is_ok() {
@@ -135,13 +136,22 @@ pub fn create_new_vm(
         eprintln!("ERROR:: Command exit code: {}", disk_resize_output.status);
     }
 
+    // Appendininning tho port forward strings to the network args of the
+    // command
+    let vm_network_args = format!("user,{}", vm_port_fwd);
+
+    // Checking the port forwaarding stirngs and splitting em into a vector
+    // let port_fwd_vec: Vec<&str> = vm_port_fwd.split(",").collect();
+    // _ = port_fwd_vec;
+
     // Building command to create a VM
     let mut create_vm_cmd = Command::new("qemu-system-x86_64");
     create_vm_cmd
         .arg("-net")
         .arg("nic")
         .arg("-net")
-        .arg("user,hostfwd=tcp::2222-:22") // forwarding SSH to 2222 on host
+        .arg(&vm_network_args) // full port forward args (raw str from user)
+        // .arg("user,hostfwd=tcp::2222-:22") // forwarding SSH to 2222 on host
         .arg("-machine")
         .arg("accel=kvm:tcg")
         .arg("-m")
