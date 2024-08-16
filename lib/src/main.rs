@@ -1,7 +1,5 @@
 // Rust imports
 
-use std::option;
-
 use clap::Parser;
 use clap::Subcommand;
 use tokio;
@@ -114,6 +112,24 @@ enum VMCommands {
             help = "The VM Image (cloud init/qemu) to download.\nSee `autovirt show available` for a full list\nof available images to download.",
         )]
         dist: String,
+    },
+    /// Resize the VM disk, memory, cpu etc.
+    Resize {
+        /// The name of the VM to resize
+        #[arg(short, long, help = "Name of the VM to resize")]
+        name: String,
+
+        /// Relative size to increase the disk by (ONLY POSITIVE VALUES)
+        #[arg(short, long, help = "The relative size to increase the disk in GB.\nSuch as 5, 10, 20 etc.", default_value = "0")]
+        disk: String,
+
+        /// New memory size in MB
+        #[arg(short, long, help = "New memory size in MB (512, 1024, 2048 etc.")]
+        memory: String,
+
+        /// New amount of CPUs
+        #[arg(short, long, help = "The new amount of CPUs for the VM (1, 2, 4 etc.")]
+        cpus: String,
     },
     /// Deletes specified VM (by name) along with associated files & relevant
     /// configs.
@@ -237,6 +253,9 @@ async fn main() {
             let _ = download::download_vm_image(dist);
 
             // let _ = download::download_vm_image(&dist.to_string());
+        },
+        VMCommands::Resize { name, disk, memory, cpus } => {
+            vmutils::resize_vm(name, disk, memory, cpus);
         }
         VMCommands::Delete { name } => {
             println!("Deleting VM (name): {}", name);

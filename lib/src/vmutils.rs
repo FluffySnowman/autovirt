@@ -7,6 +7,7 @@
 //!
 //! ---
 
+use std::fmt::format;
 use std::process::Command;
 use std::fs;
 use std::path::PathBuf;
@@ -139,6 +140,16 @@ pub fn list_vms() {
 /// ---
 pub fn delete_vm(vm_name: &String) {
 
+    // prompt the user to confirm to delete the vm
+    println!("Are you sure you want to delete the VM: {}? (yes please/N)", vm_name);
+    let mut user_input = String::new();
+    std::io::stdin().read_line(&mut user_input).expect("Failed to read user input");
+
+    if user_input.trim() != "yes please" {
+        println!("!!! ABORTING VM DELETION !!!");
+        return;
+    }
+
     // get vm img ptah from the conf file
     let vm_image_path = filesystem::get_value_from_autovirt_json(&format!("vms.{}.image_path", vm_name))
         .and_then(|v| v.as_str().map(String::from))
@@ -175,5 +186,95 @@ pub fn delete_vm(vm_name: &String) {
     } else {
         eprintln!("ERROR: No VMs found in autovirt.json ? idek whats happening here");
     }
+}
+
+/// Fnuction to resize vm based on the name, disk size, new memory  size and
+/// new amount of cpus.
+///
+/// ---
+pub fn resize_vm(
+    vm_name: &String,
+    vm_disk_resize_args: &String,
+    vm_memory_resize_args: &String,
+    vm_cpus_resize_args: &String,
+) {
+    println!("Resizing VM...");
+    println!("First resizing the disk...");
+    println!("If 0/none provided for the disk then it will stay the same.");
+    println!("The rest of the VM (cpus, memory, etc) will be simply updated\nin the autovirt.json file and the vm will have to be stopped and started \nagain for the changes to take into effect.");
+
+    // Getting  the vm image path from the config file to resize the disk
+    let vm_image_path = filesystem::get_value_from_autovirt_json(&format!("vms.{}.image_path", vm_name))
+        .and_then(|v| v.as_str().map(String::from))
+        .expect("ERROR: Could not find image path for specified VM");
+
+    println!("INFO:: VM Image Path: {}", vm_image_path);
+
+    // If the vm disk resize args are not 0 or none then resize the command
+    // should be run even (with 0 as an arg) and the vm size in the config file
+    // will stay the same. If not 0 then the vm size will be updated in the
+    // config file.
+
+    let vm_disk_size_formatted = format!("+{}G", vm_disk_resize_args);
+
+    // if vm_disk_resize_args != "+0" && vm_disk_resize_args != "none" {
+        let mut cmd = Command::new("qemu-img");
+        cmd.arg("resize");
+        cmd.arg(&vm_image_path);
+        cmd.arg(&vm_disk_size_formatted);
+
+        let output = cmd.output().expect("Failed to execute disk resize command");
+        if output.status.success() {
+            println!("LOG:: Disk resized successfully.");
+        } else {
+            eprintln!("ERROR: Failed to resize disk -> {}", String::from_utf8_lossy(&output.stderr));
+        }
+        // println!("Disk resize output: {}", output.to_);
+    // }
+
+    // Updating the autovirt.json file with the new vm size, memory and CPUs
+    let autovirt_json_path = filesystem::get_autovirt_json_path();
+    let mut autovirt_config = fs::read_to_string(&autovirt_json_path)
+        .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).map_err(Into::into))
+        .expect("ERROR: Failed to read autovirt.json config file");
+
+    if let Some(vms) = autovirt_config.get_mut("vms").and_then(|v| v.as_object_mut()) {
+        if let Some(vm_data) = vms.get_mut(vm_name) {
+
+            // update memory
+            if vm_memory_resize_args != "0" && vm_memory_resize_args != "none" {
+                vm_data["memory_mb"] = serde_json::Value::String(vm_memory_resize_args.clone());
+            }
+
+            // update cpusu
+            if vm_cpus_resize_args != "0" && vm_cpus_resize_args != "none" {
+                vm_data["cpus"] = serde_json::Value::String(vm_cpus_resize_args.clone());
+            }
+
+            // update disk size
+            if vm_disk_size_formatted != "+0" && vm_disk_size_formatted != "none" {
+                // add the original disk size to the new disk size to get the
+                // new disk size
+                let new_disk_size = vm_data.get("size").and_then(Value::as_str).unwrap_or("0");
+                let new_disk_size_int: i32 = new_disk_size.parse().unwrap();
+                let vm_disk_resize_args_int: i32 = vm_disk_resize_args.parse().unwrap();
+                let new_disk_size_final = new_disk_size_int + vm_disk_resize_args_int;
+                vm_data["size"] = serde_json::Value::String(new_disk_size_final.to_string());
+            }
+
+            // Updating the autovirt.json file with the new shit
+            fs::write(
+                &autovirt_json_path,
+                serde_json::to_string_pretty(&autovirt_config).expect("ERROR: Failed to jsonifyyy updated config"),
+            ).expect("ERROR: Failed to write updated autovirt.json conf file");
+            println!("LOG:: VM resized in autovirt.json conf file -> {}", vm_name);
+        } else {
+            eprintln!("ERROR: VM entry not found in autovirt.json conifig file -> {}", vm_name);
+        }
+    } else {
+        eprintln!("ERROR: No VMs found in autovirt.json ? idek whats happening here");
+    }
+
+    println!("VM resized successfully.");
 }
 
