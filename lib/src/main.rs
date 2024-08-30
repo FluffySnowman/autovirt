@@ -37,6 +37,7 @@ enum VMCommands {
     Info {
         #[arg(
             help = "The name of the VM to show details about",
+            required=true,
             default_value = "none"
         )]
         name: String,
@@ -51,40 +52,41 @@ enum VMCommands {
     /// (cloud-init/qemu)
     Create {
         /// The name of the new virtual machine.
-        #[arg(short, long, help = "Name of the VM to be created", default_value = "basicvm")]
+        #[arg(short, long, required=true, help = "Name of the VM to be created", default_value = "basicvm")]
         name: String,
 
         /// The distribution (linux distro) of the VM to create.
         #[arg(
             short,
             long,
+            required=true,
             help = "Distro of the VM to create (see options with \n`autovirt show available`)",
             default_value = "ubuntu2204"
         )]
         dist: String,
 
         /// The size of the new virtual machine (1G, 2G ...)
-        #[arg(short, long, help = "The disk size of the new VM in GB: 10,25,30,etc.)", default_value = "10")]
+        #[arg(short, long, required=true, help = "The disk size of the new VM in GB: 10,25,30,etc.)", default_value = "10")]
         size: String,
 
         /// The suername for the VM (non-root)
-        #[arg(short, long, help = "The username for the VM", default_value = "fluffy")]
+        #[arg(short, long, required=true, help = "The username for the VM", default_value = "fluffy")]
         user: String,
 
         /// The password for the VM (non-root)
-        #[arg(short, long, help = "The Password for the VM", default_value = "123456")]
+        #[arg(short, long, required=true, help = "The Password for the VM", default_value = "123456")]
         pass: String,
 
         /// The amount of memory in MB (Example: 512 or 1024)
-        #[arg(short, long, help = "The amount of memory for the VM", default_value = "512")]
+        #[arg(short, long, required=true, help = "The amount of memory for the VM", default_value = "512")]
         mem: String,
 
         /// The number of vCPU' s for the VM
-        #[arg(short, long, help = "The amount of vCPU's for the vm", default_value = "1")]
+        #[arg(short, long, required=true, help = "The amount of vCPU's for the vm", default_value = "1")]
         cpus: String,
 
         /// The path to an ssh key to add to the user
-        #[arg(short, long, help = "Path to an ssh key to add to the user", default_value = "none")]
+        #[arg(short, long, required=true, help = "Path to an ssh key to add to the user", default_value = "none")]
         key: String,
 
         /// String for port forwarding arguments
@@ -98,7 +100,7 @@ enum VMCommands {
     /// Runs the specified virtual machine (identified by name)
     Run  {
         /// The name of the virtual machine to run
-        #[arg(help = "Name of the VM to run")]
+        #[arg(required=true, help = "Name of the VM to run")]
         name: String,
 
         /// String for port forwarding arguments
@@ -110,8 +112,15 @@ enum VMCommands {
         /// The distro (linux distribution) of the image to download
         #[arg(
             help = "The VM Image (cloud init/qemu) to download.\nSee `autovirt show available` for a full list\nof available images to download.",
+            required=true,
         )]
         dist: String,
+    },
+    /// Show various things such as available images to download
+    Show {
+        /// Show available images to download
+        #[arg(short, long, help = "Show available images to download")]
+        available: bool,
     },
     /// Resize the VM disk, memory, cpu etc.
     Resize {
@@ -120,31 +129,31 @@ enum VMCommands {
         name: String,
 
         /// Relative size to increase the disk by (ONLY POSITIVE VALUES)
-        #[arg(short, long, help = "The relative size to increase the disk in GB.\nSuch as 5, 10, 20 etc.", default_value = "0")]
+        #[arg(short, long, required=true,  help = "The relative size to increase the disk in GB.\nSuch as 5, 10, 20 etc.", default_value = "0")]
         disk: String,
 
         /// New memory size in MB
-        #[arg(short, long, help = "New memory size in MB (512, 1024, 2048 etc.")]
+        #[arg(short, long, required=true,  help = "New memory size in MB (512, 1024, 2048 etc.")]
         memory: String,
 
         /// New amount of CPUs
-        #[arg(short, long, help = "The new amount of CPUs for the VM (1, 2, 4 etc.")]
+        #[arg(short, long, required=true,  help = "The new amount of CPUs for the VM (1, 2, 4 etc.")]
         cpus: String,
     },
     /// Clone a specified VM by name to a new VM with a new name.
     Clone {
         /// The name of the VM to clone
-        #[arg(help = "Name of the VM to clone")]
+        #[arg(required=true, help = "Name of the VM to clone")]
         name: String,
 
         /// The new name of the VM to clone to
-        #[arg(help = "Name of the new VM")]
+        #[arg(required=true, help = "Name of the new VM")]
         new_name: String,
     },
     /// Deletes specified VM (by name) along with associated files & relevant
     /// configs.
     Delete {
-        #[arg(help = "Name of the VM to delete")]
+        #[arg(required=true, help = "Name of the VM to delete")]
         name: String,
     },
     /// Gets the checksum of a specified file/image.
@@ -264,6 +273,10 @@ async fn main() {
 
             // let _ = download::download_vm_image(&dist.to_string());
         },
+        VMCommands::Show { available  } => {
+            _ = available; // this is meant to be unused
+            vmutils::show_available_images();
+        }
         VMCommands::Resize { name, disk, memory, cpus } => {
             vmutils::resize_vm(name, disk, memory, cpus);
         },
@@ -283,3 +296,4 @@ async fn main() {
         }
     }
 }
+

@@ -32,6 +32,24 @@ pub fn get_image_checksum(file: &String) {
 }
 
 
+/// Shows available VM images (using the autovirt json config file)
+pub fn show_available_images() {
+    let autovirt_json_path = filesystem::get_autovirt_json_path();
+    let autovirt_config = fs::read_to_string(&autovirt_json_path)
+        .and_then(|content| serde_json::from_str::<Value>(&content).map_err(Into::into))
+        .expect("ERROR: Failed to read autovirt.json");
+
+    if let Some(images) = autovirt_config.get("images").and_then(|v| v.as_object()) {
+        // loop through the images and only print out the images and nothing
+        // under the level of the images key
+        for (image_name, _) in images {
+            println!("- {}", image_name.color("green"));
+        }
+    } else {
+        println!("No images found.");
+    }
+}
+
 /// Function that gets information of a virtual machine by name.
 ///
 /// This simply gets the information of the virtual machine from the
@@ -289,6 +307,11 @@ pub fn resize_vm(
 }
 
 
+/// Function to clone  a vm based on the name and new name.
+///
+/// This will create a duplicate entry in the autovirt json file along with the
+/// new name and will update the image path + changes the image name in the path
+/// and the name of the vm in the new duplicate entry.
 pub fn clone_vm(vm_name: &String, vm_new_name: &String) {
     println!("LOG:: Cloning VM...");
 
