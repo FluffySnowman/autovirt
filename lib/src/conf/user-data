@@ -9,7 +9,7 @@ users:
     shell: /bin/bash
     ssh_import_id: None
     ssh_authorized_keys:
-      - ssh-rsa eeeeeeeeeeee
+      - ssh-rsa your mom
 
 chpasswd:
   expire: false

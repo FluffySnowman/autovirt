@@ -116,7 +116,7 @@ enum VMCommands {
     /// Resize the VM disk, memory, cpu etc.
     Resize {
         /// The name of the VM to resize
-        #[arg(short, long, help = "Name of the VM to resize")]
+        #[arg(short, required=true, long, help = "Name of the VM to resize")]
         name: String,
 
         /// Relative size to increase the disk by (ONLY POSITIVE VALUES)
@@ -130,6 +130,16 @@ enum VMCommands {
         /// New amount of CPUs
         #[arg(short, long, help = "The new amount of CPUs for the VM (1, 2, 4 etc.")]
         cpus: String,
+    },
+    /// Clone a specified VM by name to a new VM with a new name.
+    Clone {
+        /// The name of the VM to clone
+        #[arg(help = "Name of the VM to clone")]
+        name: String,
+
+        /// The new name of the VM to clone to
+        #[arg(help = "Name of the new VM")]
+        new_name: String,
     },
     /// Deletes specified VM (by name) along with associated files & relevant
     /// configs.
@@ -256,7 +266,10 @@ async fn main() {
         },
         VMCommands::Resize { name, disk, memory, cpus } => {
             vmutils::resize_vm(name, disk, memory, cpus);
-        }
+        },
+        VMCommands::Clone { name, new_name } => {
+            vmutils::clone_vm(name, new_name);
+        },
         VMCommands::Delete { name } => {
             println!("Deleting VM (name): {}", name);
             vmutils::delete_vm(name);

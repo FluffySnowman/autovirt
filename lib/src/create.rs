@@ -59,6 +59,22 @@ pub fn create_new_vm(
     println!("\x1b[0;32mSSH KEY: \x1b[0m{}", vm_ssh_key);
     println!("\x1b[0;32m-----------------------\x1b[0m");
 
+    // check if the vm name already exists in the config file
+    let vm_exists = filesystem::get_value_from_autovirt_json(&format!("vms.{}", vm_name)).is_some();
+    if vm_exists {
+        eprintln!("ERROR: VM with the name '{}' already exists", vm_name);
+        std::process::exit(1);
+    }
+
+    println!("Proceed? (yes please/N)");
+    let mut user_input = String::new();
+    std::io::stdin().read_line(&mut user_input).expect("Failed to read user input");
+
+    if user_input.trim() != "yes please" {
+        println!("!!! ABORTING !!!");
+        std::process::exit(1);
+    }
+
     // Fetch the filename for the specified distro
     let distro_filename = filesystem::get_value_from_autovirt_json(&format!("images.{}.filename", vm_dist))
         .and_then(|v| v.as_str().map(String::from))

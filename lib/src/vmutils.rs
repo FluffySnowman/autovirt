@@ -203,6 +203,16 @@ pub fn resize_vm(
     println!("If 0/none provided for the disk then it will stay the same.");
     println!("The rest of the VM (cpus, memory, etc) will be simply updated\nin the autovirt.json file and the vm will have to be stopped and started \nagain for the changes to take into effect.");
 
+
+    println!("Proceed? (yes please/N)");
+    let mut user_input = String::new();
+    std::io::stdin().read_line(&mut user_input).expect("Failed to read user input");
+
+    if user_input.trim() != "yes please" {
+        println!("!!! ABORTING !!!");
+        std::process::exit(1);
+    }
+
     // Getting  the vm image path from the config file to resize the disk
     let vm_image_path = filesystem::get_value_from_autovirt_json(&format!("vms.{}.image_path", vm_name))
         .and_then(|v| v.as_str().map(String::from))
@@ -276,5 +286,74 @@ pub fn resize_vm(
     }
 
     println!("VM resized successfully.");
+}
+
+
+pub fn clone_vm(vm_name: &String, vm_new_name: &String) {
+    println!("LOG:: Cloning VM...");
+
+    // getting the vm image path to get the vm to clone etc.
+    let vm_image_path = filesystem::get_value_from_autovirt_json(&format!("vms.{}.image_path", vm_name))
+        .and_then(|v| v.as_str().map(String::from))
+        .expect("ERROR: Could not find image path for specified VM");
+
+    println!("INFO:: Current VM Image path (to be cloned) -> {}", vm_image_path);
+
+    // gettig the autovirt json config file path and config contents
+    let autovirt_json_path = filesystem::get_autovirt_json_path();
+    let mut autovirt_config = fs::read_to_string(&autovirt_json_path)
+        .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).map_err(Into::into))
+        .expect("ERROR: Failed to read autovirt.json config file");
+
+    // get the vm data from the config file
+    let vm_data = autovirt_config.get("vms").and_then(|v| v.as_object()).unwrap().get(vm_name).unwrap();
+
+    println!("INFO:: VM data to be cloned -> {}", vm_data);
+    println!("INFO:: New VM name -> {}", vm_new_name);
+    println!("LOG:: Updating autovirt config file...");
+
+    // check if the new vm name already exists in the config file
+    if autovirt_config["vms"].get(vm_new_name).is_some() {
+        eprintln!("ERROR: VM with the name {} already exists in the config file", vm_new_name);
+        std::process::exit(1);
+    }
+
+    // update the json config file contents with the new vm name and new vm path
+    // with the new vm path having the new vm name instead of the current vm name
+
+    let new_vm_image_path = vm_image_path.replace(vm_name, vm_new_name);
+    let new_vm_data = vm_data.clone();
+    autovirt_config["vms"][vm_new_name] = new_vm_data;
+    autovirt_config["vms"][vm_new_name]["image_path"] = serde_json::Value::String(new_vm_image_path.clone());
+
+    println!("INFO:: New VM data -> {}", autovirt_config["vms"][vm_new_name]);
+
+    // confirmation  prompt for the user to confirm
+    println!("Are you sure you want to clone the VM: {} to {}? (yes please/N)", vm_name, vm_new_name);
+    let mut user_input = String::new();
+    std::io::stdin().read_line(&mut user_input).expect("Failed to read user input");
+
+    if user_input.trim() != "yes please" {
+        println!("!!! ABORTING VM CLONING !!!");
+        std::process::exit(1);
+    }
+
+    println!("LOG:: PRoceeding to clone VM...");
+
+    // write the updated config file to the autovirt.config json config file
+    fs::write(
+        &autovirt_json_path,
+        serde_json::to_string_pretty(&autovirt_config).expect("ERROR: Failed to jsonifyyy updated config"),
+    ).expect("ERROR: Failed to write updated autovirt.json conf file");
+
+
+    // copy the vm to the new path
+    fs::copy(&vm_image_path, &new_vm_image_path).expect("ERROR: Failed to copy base image to _VMS directory");
+    println!("LOG:: VM image cloned to: {:?}", new_vm_image_path);
+    println!("LOG:: VM cloned successfully.");
+
+    return;
+
+
 }
 

@@ -13,3 +13,7 @@ lib/isos
 lib/_VM_DISKS/
 lib/_VM_DISKS
 
+Session.vim
+*.vim
+*.nvim
+
